@@ -87,7 +87,7 @@ export default function EditLeadMagnetPanel({ onPreviewClick }: EditLeadMagnetPa
                 <h3 className={`font-semibold text-sm ${
                   activePage === 'gate' ? 'text-brand-purple' : 'text-[#9ca3af]'
                 }`}>
-                  2. Gate page
+                  2. Quiz page
                 </h3>
               </button>
 

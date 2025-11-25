@@ -28,16 +28,28 @@ export default function EditPanel() {
   const [isThinking, setIsThinking] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const [showPrompts, setShowPrompts] = useState(true);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [isDesignActive, setIsDesignActive] = useState(false);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Auto-scroll to bottom when new messages arrive
+  // Scroll to position latest messages at the top of the panel
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messagesContainerRef.current && messages.length > 0 && !isThinking) {
+      setTimeout(() => {
+        const container = messagesContainerRef.current;
+        if (container) {
+          // Scroll to top (0) to show newest messages at top with column-reverse
+          container.scrollTop = 0;
+        }
+      }, 100);
+    }
   }, [messages, isThinking]);
 
   const handleSendMessage = () => {
     if (!inputValue.trim()) return;
+
+    // Switch to chat mode when sending a message
+    setActiveMode('chat');
 
     // Add user message
     const userMessage: Message = {
@@ -57,15 +69,16 @@ export default function EditPanel() {
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: "I've made the changes you requested. The title is now smaller. Would you like me to adjust anything else?",
+        content: "I've made the changes you requested. Would you like me to adjust anything else?",
         timestamp: Date.now(),
       };
       setMessages(prev => [...prev, aiMessage]);
       setIsThinking(false);
-    }, 1500);
+    }, 2500);
   };
 
   const handlePromptClick = (prompt: string) => {
+    setActiveMode('chat');
     setInputValue(prompt);
     setTimeout(() => {
       handleSendMessage();
@@ -75,10 +88,28 @@ export default function EditPanel() {
   const handleUndo = (messageId: string) => {
     const messageIndex = messages.findIndex(m => m.id === messageId);
     if (messageIndex !== -1) {
+      const messageToUndo = messages[messageIndex];
+      
+      // Put the user message back into the input box
+      if (messageToUndo.role === 'user') {
+        setInputValue(messageToUndo.content);
+      }
+      
+      // Remove messages from this point forward
       setMessages(messages.slice(0, messageIndex));
-      if (messages.length === 0) {
+      
+      // Switch to chat mode
+      setActiveMode('chat');
+      
+      // Show prompts if no messages left
+      if (messageIndex === 0) {
         setShowPrompts(true);
       }
+      
+      // Focus the textarea
+      setTimeout(() => {
+        textareaRef.current?.focus();
+      }, 100);
     }
   };
 
@@ -88,6 +119,30 @@ export default function EditPanel() {
       handleSendMessage();
     }
   };
+
+  // Auto-resize textarea as user types
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = Math.min(textarea.scrollHeight, 200) + 'px';
+    }
+  }, [inputValue]);
+
+  const handleDesignToggle = () => {
+    const newDesignState = !isDesignActive;
+    setIsDesignActive(newDesignState);
+    if (newDesignState) {
+      setActiveMode('design');
+    } else {
+      setActiveMode('chat');
+    }
+  };
+
+  // Sync Design button state with activeMode
+  useEffect(() => {
+    setIsDesignActive(activeMode === 'design');
+  }, [activeMode]);
 
   return (
     <div className="flex h-full items-center relative shrink-0 w-[422px]" data-name="Edit Panel">
@@ -99,8 +154,7 @@ export default function EditPanel() {
         {activeMode === 'chat' && (
           <>
             {/* Messages Container */}
-            <div className="flex-1 w-full overflow-y-auto flex flex-col gap-4" style={{ display: 'flex', flexDirection: 'column-reverse' }}>
-              <div ref={messagesEndRef} />
+            <div ref={messagesContainerRef} className="flex-1 w-full overflow-y-auto flex flex-col" style={{ display: 'flex', flexDirection: 'column-reverse' }}>
               
               {/* Thinking Indicator */}
               {isThinking && (
@@ -122,15 +176,15 @@ export default function EditPanel() {
 
               {/* Messages */}
               {[...messages].reverse().map((message) => (
-                <div key={message.id} className="flex flex-col gap-2">
+                <div key={message.id} className="flex flex-col">
                   {message.role === 'user' ? (
-                    <div className="flex items-start gap-2 group">
-                      <div className="bg-[rgba(241,243,255,0.2)] border border-[rgba(208,210,221,0.5)] rounded-xl px-4 py-3 flex-1">
+                    <div className="flex flex-col gap-0.5 group w-full mb-1">
+                      <div className="bg-[rgba(255,255,255,0.1)] group-hover:bg-[rgba(255,255,255,0.13)] border border-[rgba(241,243,255,0.3)] group-hover:border-brand-gray transition-all rounded-xl px-4 py-3 w-full">
                         <p className="text-white text-sm leading-relaxed">{message.content}</p>
                       </div>
                       <button
                         onClick={() => handleUndo(message.id)}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity text-white text-xs flex items-center gap-1 whitespace-nowrap"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity text-white text-xs flex items-center gap-1 self-end"
                       >
                         Undo to here
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -139,19 +193,12 @@ export default function EditPanel() {
                       </button>
                     </div>
                   ) : (
-                    <div className="text-white text-sm leading-relaxed opacity-90">
+                    <div className="text-white text-sm leading-relaxed opacity-90 mb-6">
                       {message.content}
                     </div>
                   )}
                 </div>
               ))}
-
-              {/* Instructional Text */}
-              {showPrompts && messages.length === 0 && (
-                <p className="font-normal opacity-70 text-sm text-white w-full whitespace-pre-wrap">
-                  Edit your lead magnet with one of these prompts or make your own in the chat:
-                </p>
-              )}
 
               {/* Prompt Suggestions */}
               {showPrompts && messages.length === 0 && (
@@ -182,24 +229,85 @@ export default function EditPanel() {
                   </button>
                 </div>
               )}
-            </div>
 
-            {/* Chat Input Box */}
-            <div className="bg-[rgba(255,255,255,0.1)] border-[0.5px] border-brand-gray border-solid box-border flex flex-col gap-1 min-h-[95px] items-start p-2.5 rounded-lg shrink-0 w-full" data-name="Chat Box">
+              {/* Instructional Text */}
+              {showPrompts && messages.length === 0 && (
+                <p className="font-normal opacity-70 text-sm text-white w-full whitespace-pre-wrap mb-4">
+                  Edit your lead magnet with one of these prompts or make your own in the chat:
+                </p>
+              )}
+            </div>
+          </>
+        )}
+
+        {activeMode === 'design' && (
+          <div className="flex flex-col items-center justify-center flex-1 w-full gap-4">
+            <h2 className="text-2xl font-semibold text-white">Design Mode</h2>
+            <p className="text-white opacity-70 text-center">
+              Design customization tools will appear here.
+            </p>
+          </div>
+        )}
+
+        {activeMode === 'quiz' && (
+          <div className="flex flex-col items-center justify-center flex-1 w-full gap-4">
+            <h2 className="text-2xl font-semibold text-white">Quiz Mode</h2>
+            <p className="text-white opacity-70 text-center">
+              Quiz builder tools will appear here.
+            </p>
+          </div>
+        )}
+
+        {activeMode === 'brand' && (
+          <div className="flex flex-col items-center justify-center flex-1 w-full gap-4">
+            <h2 className="text-2xl font-semibold text-white">Brand Mode</h2>
+            <p className="text-white opacity-70 text-center">
+              Brand customization options will appear here.
+            </p>
+          </div>
+        )}
+
+        {activeMode === 'code' && (
+          <div className="flex flex-col items-center justify-center flex-1 w-full gap-4">
+            <h2 className="text-2xl font-semibold text-white">Code Mode</h2>
+            <p className="text-white opacity-70 text-center">
+              Code editor will appear here.
+            </p>
+          </div>
+        )}
+
+        {activeMode === 'settings' && (
+          <div className="flex flex-col items-center justify-center flex-1 w-full gap-4">
+            <h2 className="text-2xl font-semibold text-white">Settings</h2>
+            <p className="text-white opacity-70 text-center">
+              Settings panel will appear here.
+            </p>
+          </div>
+        )}
+
+        {/* Chat Input Box - Always Visible */}
+        <div className="bg-[rgba(255,255,255,0.1)] focus-within:bg-[rgba(255,255,255,0.13)] border-[0.5px] border-[rgba(241,243,255,0.3)] border-solid box-border flex flex-col gap-1 items-start p-2.5 rounded-lg shrink-0 w-full focus-within:border-brand-gray transition-all" data-name="Chat Box">
               <textarea
                 ref={textareaRef}
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Chat here..."
-                className="flex-1 w-full bg-transparent border-none outline-none resize-none text-sm text-white placeholder-white placeholder-opacity-70 font-medium"
-                rows={2}
+                className="w-full bg-transparent border-none outline-none resize-none text-sm text-white placeholder-white placeholder-opacity-70 font-medium overflow-hidden"
+                style={{ minHeight: '40px', maxHeight: '200px' }}
               />
               
               {/* Chat Buttons */}
               <div className="flex items-center justify-between w-full">
-                <div className="bg-[rgba(241,243,255,0.3)] box-border flex gap-1 items-center justify-center px-2 py-1 rounded-lg shrink-0">
-                  <p className="font-medium leading-normal text-xs text-brand-white">
+                <button
+                  onClick={handleDesignToggle}
+                  className={`box-border flex gap-1 items-center justify-center px-2 py-1 rounded-lg shrink-0 transition-all cursor-pointer ${
+                    isDesignActive 
+                      ? 'bg-brand-purple text-white' 
+                      : 'bg-[rgba(241,243,255,0.3)] text-brand-white hover:bg-[rgba(241,243,255,0.4)]'
+                  }`}
+                >
+                  <p className="font-medium leading-normal text-xs">
                     Design
                   </p>
                   <div className="overflow-clip relative shrink-0 size-4">
@@ -229,7 +337,7 @@ export default function EditPanel() {
                       </div>
                     </div>
                   </div>
-                </div>
+                </button>
                 
                 <div className="flex gap-2 items-center">
                   <div className="bg-[rgba(241,243,255,0.3)] box-border flex gap-1 items-center justify-center px-2 py-1 rounded-lg shrink-0">
@@ -264,53 +372,6 @@ export default function EditPanel() {
                 </div>
               </div>
             </div>
-          </>
-        )}
-
-        {activeMode === 'design' && (
-          <div className="flex flex-col items-center justify-center h-full w-full gap-4">
-            <h2 className="text-2xl font-semibold text-white">Design Mode</h2>
-            <p className="text-white opacity-70 text-center">
-              Design customization tools will appear here.
-            </p>
-          </div>
-        )}
-
-        {activeMode === 'quiz' && (
-          <div className="flex flex-col items-center justify-center h-full w-full gap-4">
-            <h2 className="text-2xl font-semibold text-white">Quiz Mode</h2>
-            <p className="text-white opacity-70 text-center">
-              Quiz builder tools will appear here.
-            </p>
-          </div>
-        )}
-
-        {activeMode === 'brand' && (
-          <div className="flex flex-col items-center justify-center h-full w-full gap-4">
-            <h2 className="text-2xl font-semibold text-white">Brand Mode</h2>
-            <p className="text-white opacity-70 text-center">
-              Brand customization options will appear here.
-            </p>
-          </div>
-        )}
-
-        {activeMode === 'code' && (
-          <div className="flex flex-col items-center justify-center h-full w-full gap-4">
-            <h2 className="text-2xl font-semibold text-white">Code Mode</h2>
-            <p className="text-white opacity-70 text-center">
-              Code editor will appear here.
-            </p>
-          </div>
-        )}
-
-        {activeMode === 'settings' && (
-          <div className="flex flex-col items-center justify-center h-full w-full gap-4">
-            <h2 className="text-2xl font-semibold text-white">Settings</h2>
-            <p className="text-white opacity-70 text-center">
-              Settings panel will appear here.
-            </p>
-          </div>
-        )}
       </div>
     </div>
   );

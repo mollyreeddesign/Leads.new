@@ -42,24 +42,7 @@ export default function LeadMagnetPreview({ onEditClick }: LeadMagnetPreviewProp
             } rounded-xl p-3 flex-1 max-w-md cursor-pointer transition-all hover:shadow-md`}
           >
             <div className="flex gap-3">
-              <div className="w-[56px] h-[56px] bg-gradient-to-br from-purple-100 via-pink-50 to-white rounded flex-shrink-0 overflow-hidden relative">
-                {/* Mini preview of data capture page */}
-                <div className="absolute inset-0 p-1.5 flex flex-col gap-0.5">
-                  <div className="h-0.5 w-6 bg-purple-400 rounded"></div>
-                  <div className="h-1.5 w-full bg-gray-800 rounded"></div>
-                  <div className="h-0.5 w-full bg-gray-400 rounded"></div>
-                  <div className="h-0.5 w-8 bg-gray-400 rounded"></div>
-                  <div className="flex gap-0.5 mt-0.5">
-                    <div className="h-0.5 w-0.5 bg-green-500 rounded-full"></div>
-                    <div className="h-0.5 flex-1 bg-gray-300 rounded"></div>
-                  </div>
-                  <div className="flex gap-0.5">
-                    <div className="h-0.5 w-0.5 bg-green-500 rounded-full"></div>
-                    <div className="h-0.5 flex-1 bg-gray-300 rounded"></div>
-                  </div>
-                  <div className="mt-auto h-3 w-full bg-purple-600 rounded"></div>
-                </div>
-              </div>
+              <div className="w-[56px] h-[56px] bg-gray-300 rounded flex-shrink-0"></div>
               <div className="flex-1 text-left">
                 <h3 className={`font-semibold text-base mb-1 ${
                   activePage === 'dataCapture' ? 'text-brand-purple' : 'text-[#9ca3af]'
@@ -81,33 +64,12 @@ export default function LeadMagnetPreview({ onEditClick }: LeadMagnetPreviewProp
             } rounded-xl p-3 flex-1 max-w-md cursor-pointer transition-all hover:shadow-md`}
           >
             <div className="flex gap-3">
-              <div className="w-[56px] h-[56px] bg-gradient-to-br from-purple-100 via-pink-50 to-white rounded flex-shrink-0 overflow-hidden relative">
-                {/* Mini preview of quiz/gate page */}
-                <div className="absolute inset-0 p-1.5 flex flex-col gap-0.5">
-                  <div className="h-1 w-8 bg-gray-800 rounded mx-auto"></div>
-                  <div className="h-0.5 w-full bg-gray-300 rounded"></div>
-                  <div className="h-0.5 w-full bg-purple-600 rounded" style={{ width: '40%' }}></div>
-                  <div className="mt-0.5 space-y-0.5">
-                    <div className="flex items-center gap-0.5 p-0.5 border border-gray-300 rounded">
-                      <div className="w-1 h-1 rounded-full border border-gray-400"></div>
-                      <div className="h-0.5 flex-1 bg-gray-300 rounded"></div>
-                    </div>
-                    <div className="flex items-center gap-0.5 p-0.5 border border-gray-300 rounded">
-                      <div className="w-1 h-1 rounded-full border border-gray-400"></div>
-                      <div className="h-0.5 flex-1 bg-gray-300 rounded"></div>
-                    </div>
-                    <div className="flex items-center gap-0.5 p-0.5 border border-gray-300 rounded">
-                      <div className="w-1 h-1 rounded-full border border-gray-400"></div>
-                      <div className="h-0.5 flex-1 bg-gray-300 rounded"></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <div className="w-[56px] h-[56px] bg-gray-300 rounded flex-shrink-0"></div>
               <div className="flex-1 text-left">
                 <h3 className={`font-semibold text-base mb-1 ${
                   activePage === 'gate' ? 'text-brand-purple' : 'text-[#9ca3af]'
                 }`}>
-                  2. Gate page
+                  2. Quiz page
                 </h3>
                 <p className="text-xs text-[#9ca3af] leading-snug">
                   The quiz to assess their starfish ability
@@ -124,24 +86,7 @@ export default function LeadMagnetPreview({ onEditClick }: LeadMagnetPreviewProp
             } rounded-xl p-3 flex-1 max-w-md cursor-pointer transition-all hover:shadow-md`}
           >
             <div className="flex gap-3">
-              <div className="w-[56px] h-[56px] bg-gradient-to-br from-purple-100 via-pink-50 to-white rounded flex-shrink-0 overflow-hidden relative">
-                {/* Mini preview of results page */}
-                <div className="absolute inset-0 p-1.5 flex flex-col items-center gap-0.5">
-                  <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
-                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  <div className="h-1 w-10 bg-gray-800 rounded"></div>
-                  <div className="h-0.5 w-8 bg-gray-400 rounded"></div>
-                  <div className="grid grid-cols-2 gap-0.5 w-full mt-0.5">
-                    <div className="h-3 bg-purple-200 rounded"></div>
-                    <div className="h-3 bg-purple-200 rounded"></div>
-                    <div className="h-3 bg-purple-200 rounded"></div>
-                    <div className="h-3 bg-purple-200 rounded"></div>
-                  </div>
-                </div>
-              </div>
+              <div className="w-[56px] h-[56px] bg-gray-300 rounded flex-shrink-0"></div>
               <div className="flex-1 text-left">
                 <h3 className={`font-semibold text-base mb-1 ${
                   activePage === 'results' ? 'text-brand-purple' : 'text-[#9ca3af]'
