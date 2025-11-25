@@ -1,0 +1,25 @@
+<svg preserveAspectRatio="none" width="100%" height="100%" overflow="visible" style="display: block;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Leads Logo">
+<g id="Vector">
+<path d="M20.6008 1.24491e-05L10.3684 0.0340068L0 10.4023L5.09921 15.5014L20.6008 1.24491e-05Z" fill="#211951"/>
+<path d="M20.6008 1.24491e-05L10.3684 0.0340068L0 10.4023L5.09921 15.5014L20.6008 1.24491e-05Z" fill="url(#paint0_linear_0_137)" fill-opacity="0.2"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M23.9663 13.6317L24.0003 3.39944L8.49868 18.9008L13.5979 24L23.9663 13.6317Z" fill="#211951"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M23.9663 13.6317L24.0003 3.39944L8.49868 18.9008L13.5979 24L23.9663 13.6317Z" fill="url(#paint1_linear_0_137)" fill-opacity="0.2"/>
+<path d="M0 10.4023L3.39949 7.00278L8.4987 12.1019L5.09921 15.5014L0 10.4023Z" fill="#836FFF"/>
+<path d="M8.49868 18.9008L11.8982 15.5014L16.9974 20.6005L13.5979 24L8.49868 18.9008Z" fill="#836FFF"/>
+<path d="M15.4335 5.16714L20.6007 0L24.0002 3.39943L18.833 8.56657L15.4335 5.16714Z" fill="#836FFF"/>
+<path d="M18.1531 7.88668L18.833 8.56657L24.0002 3.39943L18.1531 7.88668Z" fill="var(--fill-0, #715EE7)"/>
+<path d="M16.1134 5.84702L15.4335 5.16714L20.6007 0L16.1134 5.84702Z" fill="var(--fill-0, #715EE7)"/>
+</g>
+</g>
+<defs>
+<linearGradient id="paint0_linear_0_137" x1="18.0201" y1="0.0526495" x2="18.0201" y2="7.94739" gradientUnits="userSpaceOnUse">
+<stop stop-color="white"/>
+<stop offset="1" stop-color="#211951" stop-opacity="0"/>
+</linearGradient>
+<linearGradient id="paint1_linear_0_137" x1="23.9477" y1="5.98022" x2="16.0529" y2="5.98022" gradientUnits="userSpaceOnUse">
+<stop stop-color="white"/>
+<stop offset="1" stop-color="#211951" stop-opacity="0"/>
+</linearGradient>
+</defs>
+</svg>
