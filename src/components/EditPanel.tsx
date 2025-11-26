@@ -12,7 +12,7 @@ import img26 from '../assets/icons/design-white-5.svg';
 // Edit icon
 import img27 from '../assets/icons/edit.svg';
 
-type ModeType = 'chat' | 'design' | 'quiz' | 'brand' | 'code' | 'settings';
+type ModeType = 'chat' | 'design' | 'controls' | 'brand' | 'code' | 'settings';
 
 type Message = {
   id: string;
@@ -250,11 +250,11 @@ export default function EditPanel() {
           </div>
         )}
 
-        {activeMode === 'quiz' && (
+        {activeMode === 'controls' && (
           <div className="flex flex-col items-center justify-center flex-1 w-full gap-4">
-            <h2 className="text-2xl font-semibold text-white">Quiz Mode</h2>
+            <h2 className="text-2xl font-semibold text-white">Controls</h2>
             <p className="text-white opacity-70 text-center">
-              Quiz logic and results tools will appear here.
+              Control settings and options will appear here.
             </p>
           </div>
         )}

@@ -1,3 +1,5 @@
+import { FileCog } from 'lucide-react';
+
 // Robot icon parts (Chat mode)
 import img from '../assets/icons/robot-1.svg';
 import img1 from '../assets/icons/robot-2.svg';
@@ -12,13 +14,6 @@ import img7 from '../assets/icons/design-3.svg';
 import img8 from '../assets/icons/design-4.svg';
 import img9 from '../assets/icons/design-5.svg';
 
-// Quiz icon parts (Quiz mode)
-import img10 from '../assets/icons/quiz-1.svg';
-import img11 from '../assets/icons/quiz-2.svg';
-import img12 from '../assets/icons/quiz-3.svg';
-import img13 from '../assets/icons/quiz-4.svg';
-import img14 from '../assets/icons/quiz-5.svg';
-
 // Brand icon parts (Brand mode)
 import img15 from '../assets/icons/brand-1.svg';
 import img16 from '../assets/icons/brand-2.svg';
@@ -32,7 +27,7 @@ import img19 from '../assets/icons/code-2.svg';
 import img20 from '../assets/icons/settings-1.svg';
 import img21 from '../assets/icons/settings-2.svg';
 
-type ModeType = 'chat' | 'design' | 'quiz' | 'brand' | 'code' | 'settings';
+type ModeType = 'chat' | 'design' | 'controls' | 'brand' | 'code' | 'settings';
 
 type SideMenuProps = {
   activeMode: ModeType;
@@ -141,57 +136,21 @@ export default function SideMenu({ activeMode, onModeChange }: SideMenuProps) {
             )}
           </button>
 
-          {/* Quiz Mode */}
+          {/* Controls Mode */}
           <button 
-            onClick={() => onModeChange('quiz')}
+            onClick={() => onModeChange('controls')}
             className="h-[50px] relative shrink-0 w-full cursor-pointer bg-transparent border-0 group"
           >
             <div className="absolute flex flex-col gap-1 items-center justify-center left-0 size-[50px] top-0 z-10">
-              <div className="overflow-clip relative shrink-0 size-5">
-              <div className="absolute bottom-3/4 left-[33.33%] right-[66.67%] top-[8.33%]">
-                <div className="absolute inset-[-25%_-0.83px]">
-                  <img alt="" className="block max-w-none size-full" src={img10} />
-                </div>
-              </div>
-              <div className="absolute bottom-3/4 left-1/2 right-1/2 top-[8.33%]">
-                <div className="absolute inset-[-25%_-0.83px]">
-                  <img alt="" className="block max-w-none size-full" src={img10} />
-                </div>
-              </div>
-              <div className="absolute bottom-3/4 left-[66.67%] right-[33.33%] top-[8.33%]">
-                <div className="absolute inset-[-25%_-0.83px]">
-                  <img alt="" className="block max-w-none size-full" src={img10} />
-                </div>
-              </div>
-              <div className="absolute inset-[16.67%_16.67%_8.33%_16.67%]">
-                <div className="absolute inset-[-5.56%_-6.25%]">
-                  <img alt="" className="block max-w-none size-full" src={img11} />
-                </div>
-              </div>
-              <div className="absolute inset-[41.67%_41.67%_58.33%_33.33%]">
-                <div className="absolute inset-[-0.83px_-16.67%]">
-                  <img alt="" className="block max-w-none size-full" src={img12} />
-                </div>
-              </div>
-              <div className="absolute inset-[58.33%_33.33%_41.67%_33.33%]">
-                <div className="absolute inset-[-0.83px_-12.5%]">
-                  <img alt="" className="block max-w-none size-full" src={img13} />
-                </div>
-              </div>
-              <div className="absolute bottom-1/4 left-[33.33%] right-[45.83%] top-3/4">
-                <div className="absolute inset-[-0.83px_-20%]">
-                  <img alt="" className="block max-w-none size-full" src={img14} />
-                </div>
-              </div>
-            </div>
+              <FileCog className="w-5 h-5 text-[#d0d2dd]" />
               <p className="font-medium leading-normal min-w-full relative shrink-0 text-[#d0d2dd] text-xs text-center w-[min-content] whitespace-pre-wrap">
-                Quiz
+                Controls
               </p>
             </div>
             {/* Hover state */}
             <div className="absolute bg-[rgba(241,243,255,0.15)] left-[-4px] rounded-lg w-[58px] h-[58px] top-[-4px] opacity-0 group-hover:opacity-100 transition-opacity" />
             {/* Active state */}
-            {activeMode === 'quiz' && (
+            {activeMode === 'controls' && (
               <div className="absolute bg-[rgba(241,243,255,0.3)] left-[-4px] rounded-lg w-[58px] h-[58px] top-[-4px]" />
             )}
           </button>
