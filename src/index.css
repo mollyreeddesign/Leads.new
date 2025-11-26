@@ -34,3 +34,19 @@ body {
   box-sizing: border-box;
 }
 
+/* Animated border glow effect */
+@keyframes border-glow {
+  0%, 100% {
+    border-color: #16F5BA;
+    box-shadow: 0 0 12px rgba(22, 245, 186, 0.4);
+  }
+  50% {
+    border-color: rgba(22, 245, 186, 0.5);
+    box-shadow: 0 0 6px rgba(22, 245, 186, 0.2);
+  }
+}
+
+.animate-border-sweep {
+  animation: border-glow 2s ease-in-out infinite;
+}
+

@@ -178,206 +178,206 @@ export default function EditLeadMagnetPanel({ onPreviewClick }: EditLeadMagnetPa
   function renderDataCapturePage() {
     return (
       <>
-        {/* Hero Section Preview */}
-        <div className="relative bg-gradient-to-br from-purple-100 via-pink-50 to-white px-6 py-8">
-          <div className="flex items-start gap-6">
-            <div className="flex-1">
-              <p className="text-[8px] font-semibold text-gray-600 mb-2 uppercase tracking-wide">ZORVO</p>
-              <h1 className="text-xl font-bold mb-3 leading-tight">
-                Unlock Your Starfish Potential with the Starfish Quiz!
-              </h1>
-              <p className="text-gray-700 mb-4 text-xs leading-relaxed">
-                Discover your starfish's hidden talents and needs with our fun and informative quiz. Get personalized insights to ensure a happy and healthy starfish.
-              </p>
-              <div className="space-y-2">
-                <div className="flex items-center gap-1.5">
-                  <div className="w-3 h-3 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
-                    <svg className="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                    </svg>
+              {/* Hero Section Preview */}
+              <div className="relative bg-gradient-to-br from-purple-100 via-pink-50 to-white px-6 py-8">
+                <div className="flex items-start gap-6">
+                  <div className="flex-1">
+                    <p className="text-[8px] font-semibold text-gray-600 mb-2 uppercase tracking-wide">ZORVO</p>
+                    <h1 className="text-xl font-bold mb-3 leading-tight">
+                      Unlock Your Starfish Potential with the Starfish Quiz!
+                    </h1>
+                    <p className="text-gray-700 mb-4 text-xs leading-relaxed">
+                      Discover your starfish's hidden talents and needs with our fun and informative quiz. Get personalized insights to ensure a happy and healthy starfish.
+                    </p>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-3 h-3 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
+                          <svg className="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                        <span className="text-xs text-gray-700">Understand your starfish's unique personality</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-3 h-3 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
+                          <svg className="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                        <span className="text-xs text-gray-700">Get tailored care tips for optimal health</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-3 h-3 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
+                          <svg className="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                        <span className="text-xs text-gray-700">Learn how to create the perfect starfish habitat</span>
+                      </div>
+                    </div>
                   </div>
-                  <span className="text-xs text-gray-700">Understand your starfish's unique personality</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <div className="w-3 h-3 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
-                    <svg className="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                    </svg>
+                  <div className="flex-shrink-0">
+                    <img 
+                      src="https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=300&h=300&fit=crop" 
+                      alt="A vibrant starfish on a sandy seabed"
+                      className="w-32 h-32 object-cover rounded-lg shadow-lg"
+                    />
                   </div>
-                  <span className="text-xs text-gray-700">Get tailored care tips for optimal health</span>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <div className="w-3 h-3 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
-                    <svg className="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                    </svg>
+              </div>
+
+              {/* Email Capture Form Preview */}
+              <div className="px-6 py-6 bg-white">
+                <div className="max-w-xs mx-auto">
+                  <h2 className="text-base font-bold text-center mb-3">Take the Starfish Quiz Now!</h2>
+                  
+                  <div className="mb-3">
+                    <label className="block text-[10px] text-gray-600 mb-1">Email Address</label>
+                    <div className="relative">
+                      <svg className="absolute left-2 top-1/2 transform -translate-y-1/2 w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                      <div className="w-full pl-7 pr-3 py-2 border border-gray-300 rounded-lg text-[10px] text-gray-400">
+                        your.email@example.com
+                      </div>
+                    </div>
                   </div>
-                  <span className="text-xs text-gray-700">Learn how to create the perfect starfish habitat</span>
+
+                  <div className="flex items-start gap-1.5 mb-3">
+                    <div className="w-3 h-3 border border-gray-300 rounded mt-0.5 flex-shrink-0"></div>
+                    <label className="text-[9px] text-gray-600 leading-tight">
+                      I agree to the Privacy Policy and Terms of Service
+                    </label>
+                  </div>
+
+                  <div className="w-full bg-brand-purple text-white py-2 rounded-lg font-semibold text-xs text-center">
+                    Discover My Starfish's Potential
+                  </div>
+
+                  <p className="text-[9px] text-gray-500 text-center mt-2">
+                    We respect your privacy. Unsubscribe at any time.
+                  </p>
                 </div>
               </div>
-            </div>
-            <div className="flex-shrink-0">
-              <img 
-                src="https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=300&h=300&fit=crop" 
-                alt="A vibrant starfish on a sandy seabed"
-                className="w-32 h-32 object-cover rounded-lg shadow-lg"
-              />
-            </div>
-          </div>
-        </div>
 
-        {/* Email Capture Form Preview */}
-        <div className="px-6 py-6 bg-white">
-          <div className="max-w-xs mx-auto">
-            <h2 className="text-base font-bold text-center mb-3">Take the Starfish Quiz Now!</h2>
-            
-            <div className="mb-3">
-              <label className="block text-[10px] text-gray-600 mb-1">Email Address</label>
-              <div className="relative">
-                <svg className="absolute left-2 top-1/2 transform -translate-y-1/2 w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-                <div className="w-full pl-7 pr-3 py-2 border border-gray-300 rounded-lg text-[10px] text-gray-400">
-                  your.email@example.com
+              {/* Testimonials Preview */}
+              <div className="px-6 py-6 bg-gray-50">
+                <h2 className="text-base font-bold text-center mb-4">What Starfish Owners Are Saying</h2>
+                
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="bg-white p-3 rounded-lg">
+                    <div className="flex gap-0.5 mb-2">
+                      {[...Array(5)].map((_, i) => (
+                        <svg key={i} className="w-2.5 h-2.5 text-yellow-400 fill-current" viewBox="0 0 20 20">
+                          <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
+                        </svg>
+                      ))}
+                    </div>
+                    <p className="text-[10px] text-gray-700 mb-2 italic">
+                      "I never knew my starfish had such a unique personality!"
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full bg-brand-purple flex items-center justify-center text-white font-semibold text-[9px]">
+                        AS
+                      </div>
+                      <div>
+                        <p className="font-semibold text-[10px]">Alice Smith</p>
+                        <p className="text-[8px] text-gray-500">Starfish Enthusiast</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white p-3 rounded-lg">
+                    <div className="flex gap-0.5 mb-2">
+                      {[...Array(5)].map((_, i) => (
+                        <svg key={i} className="w-2.5 h-2.5 text-yellow-400 fill-current" viewBox="0 0 20 20">
+                          <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
+                        </svg>
+                      ))}
+                    </div>
+                    <p className="text-[10px] text-gray-700 mb-2 italic">
+                      "The tailored care tips were a game-changer!"
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold text-[9px]">
+                        RD
+                      </div>
+                      <div>
+                        <p className="font-semibold text-[10px]">Robert Davis</p>
+                        <p className="text-[8px] text-gray-500">Aquarium Hobbyist</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white p-3 rounded-lg">
+                    <div className="flex gap-0.5 mb-2">
+                      {[...Array(5)].map((_, i) => (
+                        <svg key={i} className="w-2.5 h-2.5 text-yellow-400 fill-current" viewBox="0 0 20 20">
+                          <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
+                        </svg>
+                      ))}
+                    </div>
+                    <p className="text-[10px] text-gray-700 mb-2 italic">
+                      "I was struggling to create the right habitat for my starfish, but this quiz provided all the answers I needed!"
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full bg-pink-500 flex items-center justify-center text-white font-semibold text-[9px]">
+                        JM
+                      </div>
+                      <div>
+                        <p className="font-semibold text-[10px]">Jane Miller</p>
+                        <p className="text-[8px] text-gray-500">Marine Biologist Student</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="flex items-start gap-1.5 mb-3">
-              <div className="w-3 h-3 border border-gray-300 rounded mt-0.5 flex-shrink-0"></div>
-              <label className="text-[9px] text-gray-600 leading-tight">
-                I agree to the Privacy Policy and Terms of Service
-              </label>
-            </div>
+              {/* Benefits Section */}
+              <div className="px-6 py-6 bg-white">
+                <h2 className="text-base font-bold text-center mb-4">Why Take the Starfish Quiz?</h2>
+                
+                <div className="grid grid-cols-3 gap-4">
+                  {/* Benefit 1 */}
+                  <div className="text-center">
+                    <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                      <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                    </div>
+                    <h3 className="font-bold text-xs mb-1">Quick & Easy</h3>
+                    <p className="text-[9px] text-gray-600">
+                      Get instant insights into your starfish's needs with our user-friendly quiz.
+                    </p>
+                  </div>
 
-            <div className="w-full bg-brand-purple text-white py-2 rounded-lg font-semibold text-xs text-center">
-              Discover My Starfish's Potential
-            </div>
+                  {/* Benefit 2 */}
+                  <div className="text-center">
+                    <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                      <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <h3 className="font-bold text-xs mb-1">Free & Valuable</h3>
+                    <p className="text-[9px] text-gray-600">
+                      Access expert advice and personalized recommendations without spending a dime.
+                    </p>
+                  </div>
 
-            <p className="text-[9px] text-gray-500 text-center mt-2">
-              We respect your privacy. Unsubscribe at any time.
-            </p>
-          </div>
-        </div>
-
-        {/* Testimonials Preview */}
-        <div className="px-6 py-6 bg-gray-50">
-          <h2 className="text-base font-bold text-center mb-4">What Starfish Owners Are Saying</h2>
-          
-          <div className="grid grid-cols-3 gap-3">
-            <div className="bg-white p-3 rounded-lg">
-              <div className="flex gap-0.5 mb-2">
-                {[...Array(5)].map((_, i) => (
-                  <svg key={i} className="w-2.5 h-2.5 text-yellow-400 fill-current" viewBox="0 0 20 20">
-                    <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
-                  </svg>
-                ))}
-              </div>
-              <p className="text-[10px] text-gray-700 mb-2 italic">
-                "I never knew my starfish had such a unique personality!"
-              </p>
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-full bg-brand-purple flex items-center justify-center text-white font-semibold text-[9px]">
-                  AS
-                </div>
-                <div>
-                  <p className="font-semibold text-[10px]">Alice Smith</p>
-                  <p className="text-[8px] text-gray-500">Starfish Enthusiast</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white p-3 rounded-lg">
-              <div className="flex gap-0.5 mb-2">
-                {[...Array(5)].map((_, i) => (
-                  <svg key={i} className="w-2.5 h-2.5 text-yellow-400 fill-current" viewBox="0 0 20 20">
-                    <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
-                  </svg>
-                ))}
-              </div>
-              <p className="text-[10px] text-gray-700 mb-2 italic">
-                "The tailored care tips were a game-changer!"
-              </p>
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold text-[9px]">
-                  RD
-                </div>
-                <div>
-                  <p className="font-semibold text-[10px]">Robert Davis</p>
-                  <p className="text-[8px] text-gray-500">Aquarium Hobbyist</p>
+                  {/* Benefit 3 */}
+                  <div className="text-center">
+                    <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                      <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                      </svg>
+                    </div>
+                    <h3 className="font-bold text-xs mb-1">Expert-Backed</h3>
+                    <p className="text-[9px] text-gray-600">
+                      Benefit from knowledge curated by marine biologists and starfish care specialists.
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
-
-            <div className="bg-white p-3 rounded-lg">
-              <div className="flex gap-0.5 mb-2">
-                {[...Array(5)].map((_, i) => (
-                  <svg key={i} className="w-2.5 h-2.5 text-yellow-400 fill-current" viewBox="0 0 20 20">
-                    <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
-                  </svg>
-                ))}
-              </div>
-              <p className="text-[10px] text-gray-700 mb-2 italic">
-                "I was struggling to create the right habitat for my starfish, but this quiz provided all the answers I needed!"
-              </p>
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-full bg-pink-500 flex items-center justify-center text-white font-semibold text-[9px]">
-                  JM
-                </div>
-                <div>
-                  <p className="font-semibold text-[10px]">Jane Miller</p>
-                  <p className="text-[8px] text-gray-500">Marine Biologist Student</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Benefits Section */}
-        <div className="px-6 py-6 bg-white">
-          <h2 className="text-base font-bold text-center mb-4">Why Take the Starfish Quiz?</h2>
-          
-          <div className="grid grid-cols-3 gap-4">
-            {/* Benefit 1 */}
-            <div className="text-center">
-              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-              </div>
-              <h3 className="font-bold text-xs mb-1">Quick & Easy</h3>
-              <p className="text-[9px] text-gray-600">
-                Get instant insights into your starfish's needs with our user-friendly quiz.
-              </p>
-            </div>
-
-            {/* Benefit 2 */}
-            <div className="text-center">
-              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <h3 className="font-bold text-xs mb-1">Free & Valuable</h3>
-              <p className="text-[9px] text-gray-600">
-                Access expert advice and personalized recommendations without spending a dime.
-              </p>
-            </div>
-
-            {/* Benefit 3 */}
-            <div className="text-center">
-              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                </svg>
-              </div>
-              <h3 className="font-bold text-xs mb-1">Expert-Backed</h3>
-              <p className="text-[9px] text-gray-600">
-                Benefit from knowledge curated by marine biologists and starfish care specialists.
-              </p>
-            </div>
-          </div>
-        </div>
       </>
     );
   }
@@ -581,9 +581,9 @@ export default function EditLeadMagnetPanel({ onPreviewClick }: EditLeadMagnetPa
                 <h3 className="font-bold text-xs mb-1">Tank Maintenance</h3>
                 <p className="text-gray-700 text-[9px]">Maintain stable water parameters. Explorer personalities thrive with consistent conditions and gentle water flow.</p>
               </div>
-            </div>
-          </div>
         </div>
+      </div>
+    </div>
 
         {/* Download CTA */}
         <div className="px-6 py-6 bg-white text-center">
@@ -596,7 +596,7 @@ export default function EditLeadMagnetPanel({ onPreviewClick }: EditLeadMagnetPa
           </button>
         </div>
       </>
-    );
+  );
   }
 }
 

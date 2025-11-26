@@ -1,7 +1,11 @@
 import { useState } from 'react';
 import SiteNavigation from './SiteNavigation';
 
+// Image assets - Local imports
+import imgLucideChevronDown from '../assets/chevron-down.svg';
+
 type PageType = 'dataCapture' | 'gate' | 'results';
+type DeviceType = 'mobile' | 'desktop' | 'tablet';
 
 type LeadMagnetPreviewProps = {
   onEditClick: () => void;
@@ -9,6 +13,41 @@ type LeadMagnetPreviewProps = {
 
 export default function LeadMagnetPreview({ onEditClick }: LeadMagnetPreviewProps) {
   const [activePage, setActivePage] = useState<PageType>('dataCapture');
+  const [selectedDevice, setSelectedDevice] = useState<DeviceType>('desktop');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  const deviceLabels = {
+    mobile: 'Mobile',
+    desktop: 'Desktop',
+    tablet: 'Tablet'
+  };
+
+  const DeviceIcon = ({ device, className = "w-5 h-5" }: { device: DeviceType; className?: string }) => {
+    if (device === 'mobile') {
+      return (
+        <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <rect x="5" y="2" width="14" height="20" rx="2" ry="2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          <line x1="12" y1="18" x2="12.01" y2="18" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      );
+    }
+    if (device === 'desktop') {
+      return (
+        <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <rect x="2" y="3" width="20" height="14" rx="2" ry="2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          <line x1="8" y1="21" x2="16" y2="21" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          <line x1="12" y1="17" x2="12" y2="21" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      );
+    }
+    // tablet
+    return (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <rect x="4" y="2" width="16" height="20" rx="2" ry="2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        <line x1="12" y1="18" x2="12.01" y2="18" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    );
+  };
 
   return (
     <div className="bg-[#fefefe] flex flex-col w-full h-screen overflow-auto">
@@ -105,16 +144,65 @@ export default function LeadMagnetPreview({ onEditClick }: LeadMagnetPreviewProp
       {/* Preview Section Header */}
       <div className="bg-white px-6 py-4 border-b border-gray-200">
         <div className="flex items-center justify-between max-w-6xl mx-auto">
-          <h2 className="text-lg font-semibold text-brand-purple">Preview</h2>
-          <div className="flex items-center gap-2 px-3 py-1.5 border border-gray-300 rounded-lg">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <rect x="4" y="2" width="16" height="20" rx="2" />
-            </svg>
-            <span className="text-sm">Desktop</span>
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
+          {/* Device Selector Dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className="bg-brand-gray border border-[rgba(131,111,255,0.2)] border-solid box-border flex gap-2 h-[34px] items-center pl-3 pr-2 py-[5px] rounded-lg hover:bg-opacity-90 transition-all cursor-pointer"
+            >
+              <DeviceIcon device={selectedDevice} className="w-5 h-5 text-brand-navy" />
+              <p className="font-medium leading-normal text-sm text-brand-navy">
+                {deviceLabels[selectedDevice]}
+              </p>
+              <div className="relative size-5">
+                <img alt="Dropdown" className="block max-w-none size-full" src={imgLucideChevronDown} />
+              </div>
+            </button>
+
+            {/* Dropdown Menu */}
+            {isDropdownOpen && (
+              <div className="absolute top-full mt-1 left-0 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-[180px] overflow-hidden">
+                {(['mobile', 'desktop', 'tablet'] as DeviceType[]).map((device) => (
+                  <button
+                    key={device}
+                    onClick={() => {
+                      setSelectedDevice(device);
+                      setIsDropdownOpen(false);
+                    }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-purple-50 transition-colors ${
+                      selectedDevice === device ? 'bg-purple-50' : ''
+                    }`}
+                  >
+                    <DeviceIcon 
+                      device={device} 
+                      className={`w-5 h-5 ${selectedDevice === device ? 'text-brand-purple' : 'text-brand-navy'}`}
+                    />
+                    <span className={`font-medium text-sm ${
+                      selectedDevice === device ? 'text-brand-purple' : 'text-brand-navy'
+                    }`}>
+                      {deviceLabels[device]}
+                    </span>
+                    {selectedDevice === device && (
+                      <svg className="w-4 h-4 ml-auto text-brand-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
+
+          {/* Edit Button */}
+          <button
+            onClick={onEditClick}
+            className="bg-brand-purple text-white px-6 py-2 rounded-lg font-semibold text-sm hover:bg-opacity-90 transition-all cursor-pointer flex items-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+            Edit
+          </button>
         </div>
       </div>
 

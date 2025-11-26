@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { ArrowUp } from 'lucide-react';
 import SideMenu from './SideMenu';
 
 // Design icon parts (white - for chat button)
@@ -8,10 +9,8 @@ import img24 from '../assets/icons/design-white-3.svg';
 import img25 from '../assets/icons/design-white-4.svg';
 import img26 from '../assets/icons/design-white-5.svg';
 
-// Edit and arrow icons
+// Edit icon
 import img27 from '../assets/icons/edit.svg';
-import img28 from '../assets/icons/arrow-up-1.svg';
-import img29 from '../assets/icons/arrow-up-2.svg';
 
 type ModeType = 'chat' | 'design' | 'quiz' | 'brand' | 'code' | 'settings';
 
@@ -29,6 +28,7 @@ export default function EditPanel() {
   const [inputValue, setInputValue] = useState('');
   const [showPrompts, setShowPrompts] = useState(true);
   const [isDesignActive, setIsDesignActive] = useState(false);
+  const [hasInteracted, setHasInteracted] = useState(false);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -78,6 +78,7 @@ export default function EditPanel() {
   };
 
   const handlePromptClick = (prompt: string) => {
+    setHasInteracted(true);
     setActiveMode('chat');
     setInputValue(prompt);
     setTimeout(() => {
@@ -179,7 +180,7 @@ export default function EditPanel() {
                 <div key={message.id} className="flex flex-col">
                   {message.role === 'user' ? (
                     <div className="flex flex-col gap-0.5 group w-full mb-1">
-                      <div className="bg-[rgba(255,255,255,0.1)] group-hover:bg-[rgba(255,255,255,0.13)] border border-[rgba(241,243,255,0.3)] group-hover:border-brand-gray transition-all rounded-xl px-4 py-3 w-full">
+                      <div className="bg-[rgba(255,255,255,0.1)] group-hover:bg-[rgba(255,255,255,0.13)] border border-[rgba(241,243,255,0.3)] group-hover:border-brand-gray transition-all rounded-xl px-3 py-2 w-full">
                         <p className="text-white text-sm leading-relaxed">{message.content}</p>
                       </div>
                       <button
@@ -193,7 +194,7 @@ export default function EditPanel() {
                       </button>
                     </div>
                   ) : (
-                    <div className="text-white text-sm leading-relaxed opacity-90 mb-6">
+                    <div className="text-white text-sm leading-relaxed opacity-90 mb-6 px-3">
                       {message.content}
                     </div>
                   )}
@@ -202,7 +203,7 @@ export default function EditPanel() {
 
               {/* Prompt Suggestions */}
               {showPrompts && messages.length === 0 && (
-                <div className="flex flex-col gap-2 items-start w-full" data-name="Prompt Suggestions">
+                <div className="flex flex-col gap-3 items-start w-full" data-name="Prompt Suggestions">
                   <button
                     onClick={() => handlePromptClick('Add a new custom section.')}
                     className="border border-[rgba(208,210,221,0.7)] border-solid box-border flex gap-2 items-center px-3 py-2 rounded-lg w-full hover:bg-[rgba(241,243,255,0.1)] transition-colors cursor-pointer"
@@ -253,7 +254,7 @@ export default function EditPanel() {
           <div className="flex flex-col items-center justify-center flex-1 w-full gap-4">
             <h2 className="text-2xl font-semibold text-white">Quiz Mode</h2>
             <p className="text-white opacity-70 text-center">
-              Quiz builder tools will appear here.
+              Quiz logic and results tools will appear here.
             </p>
           </div>
         )}
@@ -286,12 +287,16 @@ export default function EditPanel() {
         )}
 
         {/* Chat Input Box - Always Visible */}
-        <div className="bg-[rgba(255,255,255,0.1)] focus-within:bg-[rgba(255,255,255,0.13)] border-[0.5px] border-[rgba(241,243,255,0.3)] border-solid box-border flex flex-col gap-1 items-start p-2.5 rounded-lg shrink-0 w-full focus-within:border-brand-gray transition-all" data-name="Chat Box">
+        <div className={`focus-within:bg-[rgba(255,255,255,0.13)] border-[0.5px] border-solid box-border flex flex-col gap-1 items-start p-2.5 rounded-lg shrink-0 w-full focus-within:border-brand-gray transition-all ${
+          !hasInteracted ? 'animate-border-sweep' : 'bg-[rgba(255,255,255,0.1)] border-[rgba(241,243,255,0.3)]'
+        }`} data-name="Chat Box">
               <textarea
                 ref={textareaRef}
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={handleKeyDown}
+                onFocus={() => setHasInteracted(true)}
+                onClick={() => setHasInteracted(true)}
                 placeholder="Chat here..."
                 className="w-full bg-transparent border-none outline-none resize-none text-sm text-white placeholder-white placeholder-opacity-70 font-medium overflow-hidden"
                 style={{ minHeight: '40px', maxHeight: '200px' }}
@@ -300,7 +305,10 @@ export default function EditPanel() {
               {/* Chat Buttons */}
               <div className="flex items-center justify-between w-full">
                 <button
-                  onClick={handleDesignToggle}
+                  onClick={() => {
+                    setHasInteracted(true);
+                    handleDesignToggle();
+                  }}
                   className={`box-border flex gap-1 items-center justify-center px-2 py-1 rounded-lg shrink-0 transition-all cursor-pointer ${
                     isDesignActive 
                       ? 'bg-brand-purple text-white' 
@@ -340,7 +348,10 @@ export default function EditPanel() {
                 </button>
                 
                 <div className="flex gap-2 items-center">
-                  <div className="bg-[rgba(241,243,255,0.3)] box-border flex gap-1 items-center justify-center px-2 py-1 rounded-lg shrink-0">
+                  <button
+                    onClick={() => setHasInteracted(true)}
+                    className="bg-[rgba(241,243,255,0.3)] box-border flex gap-1 items-center justify-center px-2 py-1 rounded-lg shrink-0 cursor-pointer"
+                  >
                     <p className="font-medium leading-normal text-xs text-brand-white">
                       Edit
                     </p>
@@ -351,23 +362,15 @@ export default function EditPanel() {
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </button>
                   <button
-                    onClick={handleSendMessage}
-                    className="bg-[rgba(241,243,255,0.3)] box-border flex gap-1 items-center justify-center px-1.5 py-1 rounded-full shrink-0 hover:bg-[rgba(241,243,255,0.4)] transition-colors cursor-pointer"
+                    onClick={() => {
+                      setHasInteracted(true);
+                      handleSendMessage();
+                    }}
+                    className="bg-[rgba(241,243,255,0.3)] box-border flex items-center justify-center p-1.5 rounded-full shrink-0 hover:bg-[rgba(241,243,255,0.4)] transition-colors cursor-pointer"
                   >
-                    <div className="overflow-clip relative shrink-0 size-4">
-                      <div className="absolute bottom-1/2 left-[20.83%] right-[20.83%] top-[20.83%]">
-                        <div className="absolute inset-[-14.29%_-7.14%]">
-                          <img alt="" className="block max-w-none size-full" src={img28} />
-                        </div>
-                      </div>
-                      <div className="absolute bottom-[20.83%] left-1/2 right-1/2 top-[20.83%]">
-                        <div className="absolute inset-[-7.14%_-0.67px]">
-                          <img alt="" className="block max-w-none size-full" src={img29} />
-                        </div>
-                      </div>
-                    </div>
+                    <ArrowUp className="w-4 h-4 text-white" />
                   </button>
                 </div>
               </div>
