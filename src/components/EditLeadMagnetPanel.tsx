@@ -62,47 +62,50 @@ export default function EditLeadMagnetPanel({ onPreviewClick }: EditLeadMagnetPa
         <div className="bg-white flex flex-1 flex-col h-full items-center justify-between min-h-0 min-w-px relative" data-name="Result Panel">
           {/* Page Navigation */}
           <div className="bg-brand-gray box-border flex items-center justify-between px-[18px] py-3 relative shrink-0 w-full" data-name="Page Navigation">
-            <div className="flex gap-3" data-name="Page Flow Selector">
+            <div className="flex items-center gap-2" data-name="Page Flow Selector">
+              {/* PAGES Label */}
+              <span className="font-medium text-[12px] text-[#211951] mr-1" style={{ letterSpacing: '0.1em' }}>PAGES</span>
+
               {/* Data Capture Page Tab */}
               <button
                 onClick={() => setActivePage('dataCapture')}
-                className={`bg-white border-2 ${
-                  activePage === 'dataCapture' ? 'border-brand-purple' : 'border-[#e5e7f0]'
-                } rounded-lg px-4 py-2 cursor-pointer transition-all hover:shadow-md`}
+                className={`${
+                  activePage === 'dataCapture' ? 'bg-[#16F5BA] text-brand-navy' : 'bg-white text-brand-navy'
+                } rounded-lg px-4 h-[34px] cursor-pointer transition-all hover:shadow-md font-medium text-sm`}
               >
-                <h3 className={`font-semibold text-sm ${
-                  activePage === 'dataCapture' ? 'text-brand-purple' : 'text-[#9ca3af]'
-                }`}>
-                  1. Data Capture page
-                </h3>
+                Data Capture
               </button>
 
-              {/* Gate Page Tab */}
+              {/* Arrow */}
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3.33301 8H12.6663" stroke="#211951" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M8 3.3335L12.6667 8.00016L8 12.6668" stroke="#211951" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+
+              {/* Quiz Page Tab */}
               <button
                 onClick={() => setActivePage('gate')}
-                className={`bg-white border-2 ${
-                  activePage === 'gate' ? 'border-brand-purple' : 'border-[#e5e7f0]'
-                } rounded-lg px-4 py-2 cursor-pointer transition-all hover:shadow-md`}
+                className={`${
+                  activePage === 'gate' ? 'bg-[#16F5BA] text-brand-navy' : 'bg-white text-brand-navy'
+                } rounded-lg px-4 h-[34px] cursor-pointer transition-all hover:shadow-md font-medium text-sm`}
               >
-                <h3 className={`font-semibold text-sm ${
-                  activePage === 'gate' ? 'text-brand-purple' : 'text-[#9ca3af]'
-                }`}>
-                  2. Quiz page
-                </h3>
+                Quiz
               </button>
+
+              {/* Arrow */}
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3.33301 8H12.6663" stroke="#211951" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M8 3.3335L12.6667 8.00016L8 12.6668" stroke="#211951" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
 
               {/* Results Page Tab */}
               <button
                 onClick={() => setActivePage('results')}
-                className={`bg-white border-2 ${
-                  activePage === 'results' ? 'border-brand-purple' : 'border-[#e5e7f0]'
-                } rounded-lg px-4 py-2 cursor-pointer transition-all hover:shadow-md`}
+                className={`${
+                  activePage === 'results' ? 'bg-[#16F5BA] text-brand-navy' : 'bg-white text-brand-navy'
+                } rounded-lg px-4 h-[34px] cursor-pointer transition-all hover:shadow-md font-medium text-sm`}
               >
-                <h3 className={`font-semibold text-sm ${
-                  activePage === 'results' ? 'text-brand-purple' : 'text-[#9ca3af]'
-                }`}>
-                  3. Results page
-                </h3>
+                Results
               </button>
             </div>
             

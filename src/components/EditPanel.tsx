@@ -2,13 +2,6 @@ import { useState, useRef, useEffect } from 'react';
 import { ArrowUp } from 'lucide-react';
 import SideMenu from './SideMenu';
 
-// Design icon parts (white - for chat button)
-import img22 from '../assets/icons/design-white-1.svg';
-import img23 from '../assets/icons/design-white-2.svg';
-import img24 from '../assets/icons/design-white-3.svg';
-import img25 from '../assets/icons/design-white-4.svg';
-import img26 from '../assets/icons/design-white-5.svg';
-
 // Edit icon
 import img27 from '../assets/icons/edit.svg';
 
@@ -27,8 +20,8 @@ export default function EditPanel() {
   const [isThinking, setIsThinking] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const [showPrompts, setShowPrompts] = useState(true);
-  const [isDesignActive, setIsDesignActive] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -81,8 +74,9 @@ export default function EditPanel() {
     setHasInteracted(true);
     setActiveMode('chat');
     setInputValue(prompt);
+    // Focus the textarea so user can edit before sending
     setTimeout(() => {
-      handleSendMessage();
+      textareaRef.current?.focus();
     }, 100);
   };
 
@@ -130,28 +124,20 @@ export default function EditPanel() {
     }
   }, [inputValue]);
 
-  const handleDesignToggle = () => {
-    const newDesignState = !isDesignActive;
-    setIsDesignActive(newDesignState);
-    if (newDesignState) {
-      setActiveMode('design');
-    } else {
-      setActiveMode('chat');
-    }
-  };
-
-  // Sync Design button state with activeMode
-  useEffect(() => {
-    setIsDesignActive(activeMode === 'design');
-  }, [activeMode]);
 
   return (
-    <div className="flex h-full items-center relative shrink-0 w-[422px]" data-name="Edit Panel">
+    <div className={`flex h-full items-center relative shrink-0 transition-all ${isCollapsed ? 'w-[67px]' : 'w-[422px]'}`} data-name="Edit Panel">
       {/* Side Menu */}
-      <SideMenu activeMode={activeMode} onModeChange={setActiveMode} />
+      <SideMenu 
+        activeMode={activeMode} 
+        onModeChange={setActiveMode}
+        isCollapsed={isCollapsed}
+        onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
+      />
 
       {/* Edit Area - Conditional Content Based on Mode */}
-      <div className="bg-brand-navy box-border flex flex-1 flex-col gap-[18px] h-full items-center justify-end min-h-0 min-w-px p-[15px] relative overflow-hidden" data-name="Edit Area">
+      {!isCollapsed && (
+        <div className="bg-brand-navy box-border flex flex-1 flex-col gap-6 h-full items-center justify-end min-h-0 min-w-px p-[15px] relative overflow-hidden" data-name="Edit Area">
         {activeMode === 'chat' && (
           <>
             {/* Messages Container */}
@@ -205,27 +191,42 @@ export default function EditPanel() {
               {showPrompts && messages.length === 0 && (
                 <div className="flex flex-col gap-3 items-start w-full" data-name="Prompt Suggestions">
                   <button
-                    onClick={() => handlePromptClick('Add a new custom section.')}
-                    className="border border-[rgba(208,210,221,0.7)] border-solid box-border flex gap-2 items-center px-3 py-2 rounded-lg w-full hover:bg-[rgba(241,243,255,0.1)] transition-colors cursor-pointer"
+                    onClick={() => handlePromptClick('Simplify the language')}
+                    className="bg-[rgba(255,255,255,0.07)] flex gap-3 items-center px-3 py-2 rounded-2xl w-full hover:bg-[rgba(255,255,255,0.12)] transition-colors cursor-pointer"
                   >
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className="flex-shrink-0">
+                      <path d="M7.8612 2.53053C7.88905 2.38146 7.96815 2.24682 8.08481 2.14993C8.20148 2.05304 8.34835 2 8.5 2C8.65165 2 8.79853 2.05304 8.91519 2.14993C9.03185 2.24682 9.11095 2.38146 9.1388 2.53053C9.36114 3.70633 9.59843 5.59843 10.5 6.5C11.4016 7.40157 13.2937 7.63886 14.4695 7.8612C14.6185 7.88905 14.7532 7.96815 14.8501 8.08481C14.947 8.20148 15 8.34835 15 8.5C15 8.65165 14.947 8.79853 14.8501 8.91519C14.7532 9.03185 14.6185 9.11095 14.4695 9.1388C13.2937 9.36114 11.4016 9.59843 10.5 10.5C9.59843 11.4016 9.36114 13.2937 9.1388 14.4695C9.11095 14.6185 9.03185 14.7532 8.91519 14.8501C8.79853 14.947 8.65165 15 8.5 15C8.34835 15 8.20148 14.947 8.08481 14.8501C7.96815 14.7532 7.88905 14.6185 7.8612 14.4695C7.63886 13.2937 7.40157 11.4016 6.5 10.5C5.59843 9.59843 3.70633 9.36114 2.53053 9.1388C2.38146 9.11095 2.24682 9.03185 2.14993 8.91519C2.05304 8.79853 2 8.65165 2 8.5C2 8.34835 2.05304 8.20148 2.14993 8.08481C2.24682 7.96815 2.38146 7.88905 2.53053 7.8612C3.70633 7.63886 5.59843 7.40157 6.5 6.5C7.40157 5.59843 7.63886 3.70633 7.8612 2.53053Z" stroke="#D9D9D9" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M15.667 14V17.3333" stroke="#D9D9D9" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M17.3333 15.6665H14" stroke="#D9D9D9" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
                     <p className="font-medium leading-normal text-sm text-white text-left">
-                      Add a new custom section.
+                      Simplify the language
                     </p>
                   </button>
                   <button
-                    onClick={() => handlePromptClick('Make the icons purple and center align them with the text.')}
-                    className="border border-[rgba(208,210,221,0.7)] border-solid box-border flex gap-2 items-center px-3 py-2 rounded-lg w-full hover:bg-[rgba(241,243,255,0.1)] transition-colors cursor-pointer"
+                    onClick={() => handlePromptClick('Add a stronger call-to-action')}
+                    className="bg-[rgba(255,255,255,0.07)] flex gap-3 items-center px-3 py-2 rounded-2xl w-full hover:bg-[rgba(255,255,255,0.12)] transition-colors cursor-pointer"
                   >
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className="flex-shrink-0">
+                      <path d="M7.8612 2.53053C7.88905 2.38146 7.96815 2.24682 8.08481 2.14993C8.20148 2.05304 8.34835 2 8.5 2C8.65165 2 8.79853 2.05304 8.91519 2.14993C9.03185 2.24682 9.11095 2.38146 9.1388 2.53053C9.36114 3.70633 9.59843 5.59843 10.5 6.5C11.4016 7.40157 13.2937 7.63886 14.4695 7.8612C14.6185 7.88905 14.7532 7.96815 14.8501 8.08481C14.947 8.20148 15 8.34835 15 8.5C15 8.65165 14.947 8.79853 14.8501 8.91519C14.7532 9.03185 14.6185 9.11095 14.4695 9.1388C13.2937 9.36114 11.4016 9.59843 10.5 10.5C9.59843 11.4016 9.36114 13.2937 9.1388 14.4695C9.11095 14.6185 9.03185 14.7532 8.91519 14.8501C8.79853 14.947 8.65165 15 8.5 15C8.34835 15 8.20148 14.947 8.08481 14.8501C7.96815 14.7532 7.88905 14.6185 7.8612 14.4695C7.63886 13.2937 7.40157 11.4016 6.5 10.5C5.59843 9.59843 3.70633 9.36114 2.53053 9.1388C2.38146 9.11095 2.24682 9.03185 2.14993 8.91519C2.05304 8.79853 2 8.65165 2 8.5C2 8.34835 2.05304 8.20148 2.14993 8.08481C2.24682 7.96815 2.38146 7.88905 2.53053 7.8612C3.70633 7.63886 5.59843 7.40157 6.5 6.5C7.40157 5.59843 7.63886 3.70633 7.8612 2.53053Z" stroke="#D9D9D9" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M15.667 14V17.3333" stroke="#D9D9D9" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M17.3333 15.6665H14" stroke="#D9D9D9" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
                     <p className="font-medium leading-normal text-sm text-white text-left">
-                      Make the icons purple and center align them with the text.
+                      Add a stronger call-to-action
                     </p>
                   </button>
                   <button
-                    onClick={() => handlePromptClick('Change the title of the magnet.')}
-                    className="border border-[rgba(208,210,221,0.7)] border-solid box-border flex gap-2 items-center px-3 py-2 rounded-lg w-full hover:bg-[rgba(241,243,255,0.1)] transition-colors cursor-pointer"
+                    onClick={() => handlePromptClick('Highlight the biggest pain points and how this lead magnet solves them')}
+                    className="bg-[rgba(255,255,255,0.07)] flex gap-3 items-center px-3 py-2 rounded-2xl w-full hover:bg-[rgba(255,255,255,0.12)] transition-colors cursor-pointer"
                   >
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className="flex-shrink-0">
+                      <path d="M7.8612 2.53053C7.88905 2.38146 7.96815 2.24682 8.08481 2.14993C8.20148 2.05304 8.34835 2 8.5 2C8.65165 2 8.79853 2.05304 8.91519 2.14993C9.03185 2.24682 9.11095 2.38146 9.1388 2.53053C9.36114 3.70633 9.59843 5.59843 10.5 6.5C11.4016 7.40157 13.2937 7.63886 14.4695 7.8612C14.6185 7.88905 14.7532 7.96815 14.8501 8.08481C14.947 8.20148 15 8.34835 15 8.5C15 8.65165 14.947 8.79853 14.8501 8.91519C14.7532 9.03185 14.6185 9.11095 14.4695 9.1388C13.2937 9.36114 11.4016 9.59843 10.5 10.5C9.59843 11.4016 9.36114 13.2937 9.1388 14.4695C9.11095 14.6185 9.03185 14.7532 8.91519 14.8501C8.79853 14.947 8.65165 15 8.5 15C8.34835 15 8.20148 14.947 8.08481 14.8501C7.96815 14.7532 7.88905 14.6185 7.8612 14.4695C7.63886 13.2937 7.40157 11.4016 6.5 10.5C5.59843 9.59843 3.70633 9.36114 2.53053 9.1388C2.38146 9.11095 2.24682 9.03185 2.14993 8.91519C2.05304 8.79853 2 8.65165 2 8.5C2 8.34835 2.05304 8.20148 2.14993 8.08481C2.24682 7.96815 2.38146 7.88905 2.53053 7.8612C3.70633 7.63886 5.59843 7.40157 6.5 6.5C7.40157 5.59843 7.63886 3.70633 7.8612 2.53053Z" stroke="#D9D9D9" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M15.667 14V17.3333" stroke="#D9D9D9" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M17.3333 15.6665H14" stroke="#D9D9D9" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
                     <p className="font-medium leading-normal text-sm text-white text-left">
-                      Change the title of the magnet.
+                      Highlight the biggest pain points and how this lead magnet solves them
                     </p>
                   </button>
                 </div>
@@ -298,84 +299,41 @@ export default function EditPanel() {
                 onFocus={() => setHasInteracted(true)}
                 onClick={() => setHasInteracted(true)}
                 placeholder="Chat here..."
-                className="w-full bg-transparent border-none outline-none resize-none text-sm text-white placeholder-white placeholder-opacity-70 font-medium overflow-hidden"
-                style={{ minHeight: '40px', maxHeight: '200px' }}
+                className="w-full bg-transparent border-none outline-none resize-none text-sm text-white placeholder-white placeholder-opacity-70 font-normal leading-relaxed overflow-hidden"
+                style={{ minHeight: '48px', maxHeight: '200px' }}
               />
               
               {/* Chat Buttons */}
               <div className="flex items-center justify-between w-full">
                 <button
-                  onClick={() => {
-                    setHasInteracted(true);
-                    handleDesignToggle();
-                  }}
-                  className={`box-border flex gap-1 items-center justify-center px-2 py-1 rounded-lg shrink-0 transition-all cursor-pointer ${
-                    isDesignActive 
-                      ? 'bg-brand-purple text-white' 
-                      : 'bg-[rgba(241,243,255,0.3)] text-brand-white hover:bg-[rgba(241,243,255,0.4)]'
-                  }`}
+                  onClick={() => setHasInteracted(true)}
+                  className="bg-[rgba(241,243,255,0.3)] box-border flex gap-1 items-center justify-center px-2 py-1 rounded-lg shrink-0 hover:bg-[rgba(241,243,255,0.4)] transition-colors cursor-pointer"
                 >
-                  <p className="font-medium leading-normal text-xs">
-                    Design
+                  <p className="font-medium leading-normal text-xs text-brand-white">
+                    Edit
                   </p>
                   <div className="overflow-clip relative shrink-0 size-4">
-                    <div className="absolute bottom-3/4 left-1/2 right-[41.67%] top-[17.08%]">
-                      <div className="absolute inset-[-52.63%_-50%]">
-                        <img alt="" className="block max-w-none size-full" src={img22} />
-                      </div>
-                    </div>
-                    <div className="absolute inset-[30%_78.75%_66.67%_9.17%]">
-                      <div className="absolute inset-[-125.03%_-34.49%]">
-                        <img alt="" className="block max-w-none size-full" src={img23} />
-                      </div>
-                    </div>
-                    <div className="absolute bottom-[41.67%] left-[17.08%] right-3/4 top-1/2">
-                      <div className="absolute inset-[-50%_-52.63%]">
-                        <img alt="" className="block max-w-none size-full" src={img24} />
-                      </div>
-                    </div>
-                    <div className="absolute inset-[9.17%_66.67%_78.75%_30%]">
-                      <div className="absolute inset-[-34.49%_-125.03%]">
-                        <img alt="" className="block max-w-none size-full" src={img25} />
-                      </div>
-                    </div>
-                    <div className="absolute inset-[37.49%_12.5%_12.49%_37.49%]">
-                      <div className="absolute inset-[-8.33%]">
-                        <img alt="" className="block max-w-none size-full" src={img26} />
+                    <div className="absolute bottom-[37.5%] left-1/4 right-1/4 top-[37.5%]">
+                      <div className="absolute inset-[-16.67%_-8.33%]">
+                        <img alt="" className="block max-w-none size-full" src={img27} />
                       </div>
                     </div>
                   </div>
                 </button>
                 
-                <div className="flex gap-2 items-center">
-                  <button
-                    onClick={() => setHasInteracted(true)}
-                    className="bg-[rgba(241,243,255,0.3)] box-border flex gap-1 items-center justify-center px-2 py-1 rounded-lg shrink-0 cursor-pointer"
-                  >
-                    <p className="font-medium leading-normal text-xs text-brand-white">
-                      Edit
-                    </p>
-                    <div className="overflow-clip relative shrink-0 size-4">
-                      <div className="absolute bottom-[37.5%] left-1/4 right-1/4 top-[37.5%]">
-                        <div className="absolute inset-[-16.67%_-8.33%]">
-                          <img alt="" className="block max-w-none size-full" src={img27} />
-                        </div>
-                      </div>
-                    </div>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setHasInteracted(true);
-                      handleSendMessage();
-                    }}
-                    className="bg-[rgba(241,243,255,0.3)] box-border flex items-center justify-center p-1.5 rounded-full shrink-0 hover:bg-[rgba(241,243,255,0.4)] transition-colors cursor-pointer"
-                  >
-                    <ArrowUp className="w-4 h-4 text-white" />
-                  </button>
-                </div>
+                <button
+                  onClick={() => {
+                    setHasInteracted(true);
+                    handleSendMessage();
+                  }}
+                  className="bg-[rgba(241,243,255,0.3)] box-border flex items-center justify-center p-1.5 rounded-full shrink-0 hover:bg-[rgba(241,243,255,0.4)] transition-colors cursor-pointer"
+                >
+                  <ArrowUp className="w-4 h-4 text-white" />
+                </button>
               </div>
             </div>
-      </div>
+        </div>
+      )}
     </div>
   );
 }

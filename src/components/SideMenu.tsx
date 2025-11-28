@@ -1,4 +1,4 @@
-import { FileCog } from 'lucide-react';
+import { FileCog, ArrowLeftToLine, ArrowRightToLine } from 'lucide-react';
 
 // Robot icon parts (Chat mode)
 import img from '../assets/icons/robot-1.svg';
@@ -23,18 +23,23 @@ import img17 from '../assets/icons/brand-3.svg';
 import img18 from '../assets/icons/code-1.svg';
 import img19 from '../assets/icons/code-2.svg';
 
-// Settings icon parts
-import img20 from '../assets/icons/settings-1.svg';
-import img21 from '../assets/icons/settings-2.svg';
-
 type ModeType = 'chat' | 'design' | 'controls' | 'brand' | 'code' | 'settings';
 
 type SideMenuProps = {
   activeMode: ModeType;
   onModeChange: (mode: ModeType) => void;
+  isCollapsed: boolean;
+  onToggleCollapse: () => void;
 };
 
-export default function SideMenu({ activeMode, onModeChange }: SideMenuProps) {
+export default function SideMenu({ activeMode, onModeChange, isCollapsed, onToggleCollapse }: SideMenuProps) {
+  const handleModeChange = (mode: ModeType) => {
+    if (isCollapsed) {
+      onToggleCollapse(); // Expand the panel
+    }
+    onModeChange(mode); // Switch to the mode
+  };
+
   return (
     <div className="bg-[#19133c] box-border flex gap-2.5 h-full items-center px-2 py-[14px] relative shrink-0 w-[67px] overflow-y-auto" data-name="Side Menu">
       <div className="flex flex-1 flex-col h-full items-start justify-between min-h-px min-w-px relative shrink-0" data-name="Side Menu Items">
@@ -42,7 +47,7 @@ export default function SideMenu({ activeMode, onModeChange }: SideMenuProps) {
         <div className="flex flex-col gap-3 items-start relative shrink-0 w-full" data-name="Top Side Menu Items">
           {/* Chat Mode */}
           <button 
-            onClick={() => onModeChange('chat')}
+            onClick={() => handleModeChange('chat')}
             className="h-[50px] relative shrink-0 w-full cursor-pointer group" 
             data-name="Mode Menu Item"
           >
@@ -93,7 +98,7 @@ export default function SideMenu({ activeMode, onModeChange }: SideMenuProps) {
 
           {/* Design Mode */}
           <button 
-            onClick={() => onModeChange('design')}
+            onClick={() => handleModeChange('design')}
             className="h-[50px] relative shrink-0 w-full cursor-pointer bg-transparent border-0 group"
           >
             <div className="absolute flex flex-col gap-1 items-center justify-center left-0 size-[50px] top-0 z-10">
@@ -138,7 +143,7 @@ export default function SideMenu({ activeMode, onModeChange }: SideMenuProps) {
 
           {/* Controls Mode */}
           <button 
-            onClick={() => onModeChange('controls')}
+            onClick={() => handleModeChange('controls')}
             className="h-[50px] relative shrink-0 w-full cursor-pointer bg-transparent border-0 group"
           >
             <div className="absolute flex flex-col gap-1 items-center justify-center left-0 size-[50px] top-0 z-10">
@@ -157,7 +162,7 @@ export default function SideMenu({ activeMode, onModeChange }: SideMenuProps) {
 
           {/* Brand Mode */}
           <button 
-            onClick={() => onModeChange('brand')}
+            onClick={() => handleModeChange('brand')}
             className="h-[50px] relative shrink-0 w-full cursor-pointer bg-transparent border-0 group"
           >
             <div className="absolute flex flex-col gap-1 items-center justify-center left-0 size-[50px] top-0 z-10">
@@ -192,7 +197,7 @@ export default function SideMenu({ activeMode, onModeChange }: SideMenuProps) {
 
           {/* Code Mode */}
           <button 
-            onClick={() => onModeChange('code')}
+            onClick={() => handleModeChange('code')}
             className="h-[50px] relative shrink-0 w-full cursor-pointer bg-transparent border-0 group"
           >
             <div className="absolute flex flex-col gap-1 items-center justify-center left-0 size-[50px] top-0 z-10">
@@ -221,34 +226,20 @@ export default function SideMenu({ activeMode, onModeChange }: SideMenuProps) {
           </button>
         </div>
 
-        {/* Settings at Bottom */}
+        {/* Collapse/Expand Toggle at Bottom */}
         <button 
-          onClick={() => onModeChange('settings')}
+          onClick={onToggleCollapse}
           className="h-[50px] relative shrink-0 w-full cursor-pointer bg-transparent border-0 group"
         >
           <div className="absolute flex flex-col gap-1 items-center justify-center left-0 size-[50px] top-0 z-10">
-          <div className="overflow-clip relative shrink-0 size-5">
-            <div className="absolute inset-[8.41%_12.68%]">
-              <div className="absolute inset-[-5.01%_-5.58%]">
-                <img alt="" className="block max-w-none size-full" src={img20} />
-              </div>
-            </div>
-            <div className="absolute inset-[37.5%]">
-              <div className="absolute inset-[-16.67%]">
-                <img alt="" className="block max-w-none size-full" src={img21} />
-              </div>
-            </div>
-            </div>
-            <p className="font-medium leading-normal min-w-full relative shrink-0 text-[#d0d2dd] text-xs text-center w-[min-content] whitespace-pre-wrap">
-              Settings
-            </p>
+            {isCollapsed ? (
+              <ArrowRightToLine className="w-5 h-5 text-[#d0d2dd]" />
+            ) : (
+              <ArrowLeftToLine className="w-5 h-5 text-[#d0d2dd]" />
+            )}
           </div>
           {/* Hover state */}
           <div className="absolute bg-[rgba(241,243,255,0.15)] left-[-4px] rounded-lg w-[58px] h-[58px] top-[-4px] opacity-0 group-hover:opacity-100 transition-opacity" />
-          {/* Active state */}
-          {activeMode === 'settings' && (
-            <div className="absolute bg-[rgba(241,243,255,0.3)] left-[-4px] rounded-lg w-[58px] h-[58px] top-[-4px]" />
-          )}
         </button>
       </div>
     </div>

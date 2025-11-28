@@ -18,10 +18,10 @@ export default function SiteNavigation({ onEditClick, showEditButton = false, on
             <img alt="Leads Logo" className="block max-w-none size-full" src={imgLeadsLogo} />
           </div>
           <div className="absolute bg-brand-white box-border flex gap-1 h-[30px] items-center justify-center left-[37px] px-3 py-1 rounded-lg top-0" data-name="Project Dropdown">
-            <p className="font-semibold leading-normal relative shrink-0 text-base text-brand-navy">
+            <p className="font-semibold leading-normal relative shrink-0 text-base text-brand-navy font-heading">
               Project:
             </p>
-            <p className="font-semibold leading-normal relative shrink-0 text-base text-brand-navy">
+            <p className="font-semibold leading-normal relative shrink-0 text-base text-brand-navy font-heading">
               Starfish Quiz
             </p>
             <div className="relative shrink-0 size-5">
@@ -45,6 +45,11 @@ export default function SiteNavigation({ onEditClick, showEditButton = false, on
           <div className="bg-brand-white box-border flex gap-2.5 h-[30px] items-center justify-center px-3 py-1 relative rounded-lg shrink-0">
             <p className="font-medium leading-normal relative shrink-0 text-sm text-brand-navy">
               Analytics
+            </p>
+          </div>
+          <div className="bg-brand-white box-border flex gap-2.5 h-[30px] items-center justify-center px-3 py-1 relative rounded-lg shrink-0">
+            <p className="font-medium leading-normal relative shrink-0 text-sm text-brand-navy">
+              Settings
             </p>
           </div>
           <div className="bg-brand-white box-border flex gap-2.5 h-[30px] items-center justify-center px-3 py-1 relative rounded-lg shrink-0">
