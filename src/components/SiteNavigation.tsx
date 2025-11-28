@@ -10,7 +10,7 @@ type SiteNavigationProps = {
 
 export default function SiteNavigation({ onEditClick, showEditButton = false, onPreviewClick }: SiteNavigationProps) {
   return (
-    <div className="box-border flex flex-col items-start px-6 py-3 relative shrink-0 w-full" data-name="Navigation">
+    <div className="box-border flex flex-col items-start px-[18px] py-3 relative shrink-0 w-full" data-name="Navigation">
       <div className="flex items-center justify-between relative shrink-0 w-full" data-name="Navigation Items">
         {/* Logo + Project Dropdown */}
         <div className="h-[30px] relative shrink-0 w-[227px]" data-name="Logo + Project Dropdown">

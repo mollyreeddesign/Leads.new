@@ -14,7 +14,18 @@ type Message = {
   timestamp: number;
 };
 
-export default function EditPanel() {
+type EditPanelProps = {
+  selectedElement?: HTMLElement | null;
+  selectedStyles?: {
+    textAlign: string;
+    color: string;
+    fontWeight: string;
+    fontSize: string;
+  };
+  onStyleUpdate?: (property: string, value: string) => void;
+};
+
+export default function EditPanel({ selectedElement, selectedStyles, onStyleUpdate }: EditPanelProps = {}) {
   const [activeMode, setActiveMode] = useState<ModeType>('chat');
   const [messages, setMessages] = useState<Message[]>([]);
   const [isThinking, setIsThinking] = useState(false);
@@ -37,6 +48,16 @@ export default function EditPanel() {
       }, 100);
     }
   }, [messages, isThinking]);
+
+  // Automatically switch to design mode when an element is selected
+  useEffect(() => {
+    if (selectedElement) {
+      setActiveMode('design');
+      if (isCollapsed) {
+        setIsCollapsed(false);
+      }
+    }
+  }, [selectedElement, isCollapsed]);
 
   const handleSendMessage = () => {
     if (!inputValue.trim()) return;
@@ -243,11 +264,83 @@ export default function EditPanel() {
         )}
 
         {activeMode === 'design' && (
-          <div className="flex flex-col items-center justify-center flex-1 w-full gap-4">
-            <h2 className="text-2xl font-semibold text-white">Design Mode</h2>
-            <p className="text-white opacity-70 text-center">
-              Design customization tools will appear here.
-            </p>
+          <div className="flex flex-col flex-1 w-full overflow-y-auto p-4">
+            {!selectedElement ? (
+              <div className="flex items-center justify-center flex-1">
+                <p className="text-white opacity-70 text-center">
+                  Select an image, text or icon to start designing.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                <h3 className="text-white font-semibold text-lg mb-4">Text Properties</h3>
+                
+                {/* Text Align */}
+                <div>
+                  <label className="text-white text-sm mb-2 block">Text Align</label>
+                  <div className="grid grid-cols-4 gap-2">
+                    {['left', 'center', 'right', 'justify'].map((align) => (
+                      <button
+                        key={align}
+                        onClick={() => onStyleUpdate?.('textAlign', align)}
+                        className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
+                          selectedStyles?.textAlign === align
+                            ? 'bg-brand-purple text-white'
+                            : 'bg-[rgba(255,255,255,0.1)] text-white hover:bg-[rgba(255,255,255,0.15)]'
+                        }`}
+                      >
+                        {align.charAt(0).toUpperCase() + align.slice(1)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Text Color */}
+                <div>
+                  <label className="text-white text-sm mb-2 block">Text Color</label>
+                  <input
+                    type="color"
+                    value={selectedStyles?.color || '#000000'}
+                    onChange={(e) => onStyleUpdate?.('color', e.target.value)}
+                    className="w-full h-10 rounded-lg cursor-pointer"
+                  />
+                </div>
+
+                {/* Font Weight */}
+                <div>
+                  <label className="text-white text-sm mb-2 block">Font Weight</label>
+                  <select
+                    value={selectedStyles?.fontWeight || 'normal'}
+                    onChange={(e) => onStyleUpdate?.('fontWeight', e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg bg-[rgba(255,255,255,0.1)] text-white border border-[rgba(255,255,255,0.2)] focus:border-brand-purple focus:outline-none"
+                  >
+                    <option value="normal" className="bg-brand-navy">Normal (400)</option>
+                    <option value="500" className="bg-brand-navy">Medium (500)</option>
+                    <option value="600" className="bg-brand-navy">Semibold (600)</option>
+                    <option value="bold" className="bg-brand-navy">Bold (700)</option>
+                  </select>
+                </div>
+
+                {/* Font Size */}
+                <div>
+                  <label className="text-white text-sm mb-2 block">Font Size</label>
+                  <div className="flex gap-2 items-center">
+                    <input
+                      type="number"
+                      value={parseInt(selectedStyles?.fontSize || '16')}
+                      onChange={(e) => onStyleUpdate?.('fontSize', e.target.value + 'px')}
+                      className="flex-1 px-3 py-2 rounded-lg bg-[rgba(255,255,255,0.1)] text-white border border-[rgba(255,255,255,0.2)] focus:border-brand-purple focus:outline-none"
+                      min="8"
+                      max="72"
+                    />
+                    <span className="text-white text-sm">px</span>
+                  </div>
+                </div>
+
+                {/* Note */}
+                <p className="text-white text-sm">Edit fonts in the Brand Tab</p>
+              </div>
+            )}
           </div>
         )}
 
@@ -287,10 +380,11 @@ export default function EditPanel() {
           </div>
         )}
 
-        {/* Chat Input Box - Always Visible */}
-        <div className={`focus-within:bg-[rgba(255,255,255,0.13)] border-[0.5px] border-solid box-border flex flex-col gap-1 items-start p-2.5 rounded-lg shrink-0 w-full focus-within:border-brand-gray transition-all ${
-          !hasInteracted ? 'animate-border-sweep' : 'bg-[rgba(255,255,255,0.1)] border-[rgba(241,243,255,0.3)]'
-        }`} data-name="Chat Box">
+        {/* Chat Input Box - Hidden in Design Mode */}
+        {activeMode !== 'design' && (
+          <div className={`focus-within:bg-[rgba(255,255,255,0.13)] border-[0.5px] border-solid box-border flex flex-col gap-1 items-start p-2.5 rounded-lg shrink-0 w-full focus-within:border-brand-gray transition-all ${
+            !hasInteracted ? 'animate-border-sweep' : 'bg-[rgba(255,255,255,0.1)] border-[rgba(241,243,255,0.3)]'
+          }`} data-name="Chat Box">
               <textarea
                 ref={textareaRef}
                 value={inputValue}
@@ -332,6 +426,7 @@ export default function EditPanel() {
                 </button>
               </div>
             </div>
+        )}
         </div>
       )}
     </div>
