@@ -6,12 +6,14 @@ import SiteNavigation from './SiteNavigation';
 import imgLucideChevronDown from '../assets/chevron-down.svg';
 
 type DeviceType = 'mobile' | 'desktop' | 'tablet';
+type TabType = 'Campaign' | 'Leads' | 'Analytics' | 'Settings' | 'Share';
 
 type EditLeadMagnetPanelProps = {
   onPreviewClick: () => void;
+  onTabChange?: (tab: TabType) => void;
 };
 
-export default function EditLeadMagnetPanel({ onPreviewClick }: EditLeadMagnetPanelProps) {
+export default function EditLeadMagnetPanel({ onPreviewClick, onTabChange }: EditLeadMagnetPanelProps) {
   const [selectedDevice, setSelectedDevice] = useState<DeviceType>('desktop');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [activePage, setActivePage] = useState<'dataCapture' | 'gate' | 'results'>('gate');
@@ -266,7 +268,11 @@ export default function EditLeadMagnetPanel({ onPreviewClick }: EditLeadMagnetPa
   return (
     <div className="bg-[#fefefe] flex flex-col gap-px items-start relative w-full h-screen overflow-hidden" data-name="Edit Lead Magnet Panel">
       {/* Top Navigation */}
-      <SiteNavigation onPreviewClick={onPreviewClick} />
+      <SiteNavigation 
+        onPreviewClick={onPreviewClick}
+        activeTab="Campaign"
+        onTabChange={onTabChange}
+      />
 
       {/* Edit and Result Panel */}
       <div className="flex items-center justify-between relative flex-1 w-full min-h-0 overflow-hidden" data-name="Edit and Result Panel">

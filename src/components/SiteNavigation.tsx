@@ -2,13 +2,24 @@
 import imgLeadsLogo from '../assets/leads-logo.svg';
 import imgLucideChevronDown from '../assets/chevron-down.svg';
 
+type TabType = 'Campaign' | 'Leads' | 'Analytics' | 'Settings' | 'Share';
+
 type SiteNavigationProps = {
   onEditClick?: () => void;
   showEditButton?: boolean;
   onPreviewClick?: () => void;
+  activeTab?: TabType;
+  onTabChange?: (tab: TabType) => void;
 };
 
-export default function SiteNavigation({ onEditClick, showEditButton = false, onPreviewClick }: SiteNavigationProps) {
+export default function SiteNavigation({ onEditClick, showEditButton = false, onPreviewClick, activeTab = 'Campaign', onTabChange }: SiteNavigationProps) {
+  const tabs: TabType[] = ['Campaign', 'Leads', 'Analytics', 'Settings', 'Share'];
+  
+  const handleTabClick = (tab: TabType) => {
+    if (onTabChange) {
+      onTabChange(tab);
+    }
+  };
   return (
     <div className="box-border flex flex-col items-start px-[18px] py-3 relative shrink-0 w-full" data-name="Navigation">
       <div className="flex items-center justify-between relative shrink-0 w-full" data-name="Navigation Items">
@@ -32,31 +43,19 @@ export default function SiteNavigation({ onEditClick, showEditButton = false, on
 
         {/* Main Menu */}
         <div className="flex gap-1 items-center relative shrink-0" data-name="Main Menu">
-          <div className="bg-brand-gray box-border flex gap-2.5 h-[30px] items-center justify-center px-3 py-1 relative rounded-lg shrink-0">
-            <p className="font-medium leading-normal relative shrink-0 text-sm text-brand-navy">
-              Campaign
-            </p>
-          </div>
-          <div className="bg-brand-white box-border flex gap-2.5 h-[30px] items-center justify-center px-3 py-1 relative rounded-lg shrink-0">
-            <p className="font-medium leading-normal relative shrink-0 text-sm text-brand-navy">
-              Leads
-            </p>
-          </div>
-          <div className="bg-brand-white box-border flex gap-2.5 h-[30px] items-center justify-center px-3 py-1 relative rounded-lg shrink-0">
-            <p className="font-medium leading-normal relative shrink-0 text-sm text-brand-navy">
-              Analytics
-            </p>
-          </div>
-          <div className="bg-brand-white box-border flex gap-2.5 h-[30px] items-center justify-center px-3 py-1 relative rounded-lg shrink-0">
-            <p className="font-medium leading-normal relative shrink-0 text-sm text-brand-navy">
-              Settings
-            </p>
-          </div>
-          <div className="bg-brand-white box-border flex gap-2.5 h-[30px] items-center justify-center px-3 py-1 relative rounded-lg shrink-0">
-            <p className="font-medium leading-normal relative shrink-0 text-sm text-brand-navy w-[61px] whitespace-pre-wrap">
-              Share
-            </p>
-          </div>
+          {tabs.map((tab) => (
+            <button
+              key={tab}
+              onClick={() => handleTabClick(tab)}
+              className={`${
+                activeTab === tab ? 'bg-brand-gray' : 'bg-brand-white hover:bg-gray-100'
+              } box-border flex gap-2.5 h-[30px] items-center justify-center px-3 py-1 relative rounded-lg shrink-0 cursor-pointer transition-colors`}
+            >
+              <p className="font-medium leading-normal relative shrink-0 text-sm text-brand-navy">
+                {tab}
+              </p>
+            </button>
+          ))}
         </div>
 
         {/* Publish + Preview/Edit Buttons */}
