@@ -14,51 +14,188 @@ type EditLeadMagnetPanelProps = {
 export default function EditLeadMagnetPanel({ onPreviewClick }: EditLeadMagnetPanelProps) {
   const [selectedDevice, setSelectedDevice] = useState<DeviceType>('desktop');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [activePage, setActivePage] = useState<'dataCapture' | 'gate' | 'results'>('dataCapture');
-  const [selectedElement, setSelectedElement] = useState<HTMLElement | null>(null);
+  const [activePage, setActivePage] = useState<'dataCapture' | 'gate' | 'results'>('gate');
+  const [selectedElement, setSelectedElement] = useState<HTMLElement | SVGElement | null>(null);
+  const [selectedElementType, setSelectedElementType] = useState<'text' | 'image' | 'icon' | null>(null);
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string>('');
+  const [selectedIconHtml, setSelectedIconHtml] = useState<string>('');
+  const [currentMode, setCurrentMode] = useState<'chat' | 'design' | 'controls' | 'brand' | 'code' | 'settings'>('chat');
+  const [selectedQuizAnswer, setSelectedQuizAnswer] = useState<number | null>(null);
   const [selectedStyles, setSelectedStyles] = useState({
     textAlign: 'left',
     color: '#000000',
     fontWeight: 'normal',
-    fontSize: '16px'
+    fontSize: '16px',
+    fontFamily: 'Onest'
   });
 
-  // Handle element selection
+  // Normalize font weight to match dropdown values
+  const normalizeFontWeight = (weight: string): string => {
+    // If already a dropdown value, return as-is
+    if (weight === 'normal' || weight === '500' || weight === '600' || weight === 'bold') {
+      return weight;
+    }
+    
+    const numericWeight = parseInt(weight);
+    
+    // Handle invalid/NaN cases
+    if (isNaN(numericWeight)) return 'normal';
+    
+    // Map numeric weights to dropdown values with proper ranges
+    // 100-450: normal (400)
+    // 451-550: 500 (medium)
+    // 551-650: 600 (semibold)
+    // 651+: bold (700)
+    if (numericWeight <= 450) return 'normal';
+    if (numericWeight <= 550) return '500';
+    if (numericWeight <= 650) return '600';
+    return 'bold';
+  };
+
+  // Helper to get appropriate classes for text elements
+  const getTextHoverClass = () => {
+    return currentMode === 'design' 
+      ? 'hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all' 
+      : 'transition-all';
+  };
+
+  // Helper to get appropriate classes for buttons/CTAs
+  const getButtonClass = () => {
+    if (currentMode === 'design') {
+      return 'hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all cursor-pointer';
+    }
+    return 'hover:opacity-90 active:scale-95 transition-all cursor-pointer';
+  };
+
+  // Helper to get appropriate classes for form inputs
+  const getInputClass = () => {
+    if (currentMode === 'design') {
+      return 'hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all cursor-pointer';
+    }
+    return 'hover:border-gray-400 transition-all cursor-text';
+  };
+
+  // Helper to get appropriate classes for icons
+  const getIconClass = () => {
+    return currentMode === 'design' 
+      ? 'hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all cursor-pointer' 
+      : 'transition-all';
+  };
+
+  // Handle quiz answer selection
+  const handleQuizAnswerClick = (answerIndex: number) => {
+    // Only allow selection when not in design mode
+    if (currentMode !== 'design') {
+      setSelectedQuizAnswer(answerIndex);
+    }
+  };
+
+  // Handle text element selection
   const handleElementClick = (event: React.MouseEvent<HTMLElement>) => {
+    // Only allow element selection in design mode
+    if (currentMode !== 'design') return;
+    
     event.stopPropagation();
     const element = event.currentTarget;
     
     // Remove border from previously selected element
     if (selectedElement) {
       selectedElement.style.outline = '';
-      selectedElement.contentEditable = 'false';
+      if (selectedElement instanceof HTMLElement) {
+        selectedElement.contentEditable = 'false';
+      }
     }
     
     // Add border to newly selected element
     element.style.outline = '2px solid #836FFF';
     
     // Make element editable
-    element.contentEditable = 'true';
-    element.focus();
+    if (element instanceof HTMLElement) {
+      element.contentEditable = 'true';
+      element.focus();
+    }
     
     // Get computed styles
     const computedStyles = window.getComputedStyle(element);
+    const rawFontWeight = computedStyles.fontWeight || 'normal';
+    const rawFontFamily = computedStyles.fontFamily || 'Onest';
+    
+    // Extract first font family name and remove quotes
+    const fontFamily = rawFontFamily.split(',')[0].replace(/['"]/g, '').trim();
+    
     setSelectedStyles({
       textAlign: computedStyles.textAlign || 'left',
       color: computedStyles.color || '#000000',
-      fontWeight: computedStyles.fontWeight || 'normal',
-      fontSize: computedStyles.fontSize || '16px'
+      fontWeight: normalizeFontWeight(rawFontWeight),
+      fontSize: computedStyles.fontSize || '16px',
+      fontFamily: fontFamily
     });
     
     setSelectedElement(element);
+    setSelectedElementType('text');
+  };
+
+  // Handle image element selection
+  const handleImageClick = (event: React.MouseEvent<HTMLImageElement>) => {
+    // Only allow element selection in design mode
+    if (currentMode !== 'design') return;
+    
+    event.stopPropagation();
+    const image = event.currentTarget;
+    
+    // Remove border from previously selected element
+    if (selectedElement) {
+      selectedElement.style.outline = '';
+      if (selectedElement instanceof HTMLElement && selectedElement.contentEditable === 'true') {
+        selectedElement.contentEditable = 'false';
+      }
+    }
+    
+    // Add border to newly selected image
+    image.style.outline = '2px solid #836FFF';
+    
+    // Capture image URL
+    setSelectedImageUrl(image.src || '');
+    setSelectedElement(image);
+    setSelectedElementType('image');
+  };
+
+  // Handle icon element selection (SVG or icon container)
+  const handleIconClick = (event: React.MouseEvent<HTMLDivElement | SVGSVGElement>) => {
+    // Only allow element selection in design mode
+    if (currentMode !== 'design') return;
+    
+    event.stopPropagation();
+    const icon = event.currentTarget;
+    
+    // Remove border from previously selected element
+    if (selectedElement) {
+      selectedElement.style.outline = '';
+      if (selectedElement instanceof HTMLElement && selectedElement.contentEditable === 'true') {
+        selectedElement.contentEditable = 'false';
+      }
+    }
+    
+    // Add border to newly selected icon
+    icon.style.outline = '2px solid #836FFF';
+    
+    // Capture icon HTML for preview
+    setSelectedIconHtml(icon.innerHTML || icon.outerHTML);
+    setSelectedElement(icon);
+    setSelectedElementType('icon');
   };
 
   // Handle deselection by clicking outside
   const handleBackgroundClick = () => {
     if (selectedElement) {
       selectedElement.style.outline = '';
-      selectedElement.contentEditable = 'false';
+      if (selectedElement instanceof HTMLElement && selectedElement.contentEditable === 'true') {
+        selectedElement.contentEditable = 'false';
+      }
       setSelectedElement(null);
+      setSelectedElementType(null);
+      setSelectedImageUrl('');
+      setSelectedIconHtml('');
     }
   };
 
@@ -66,10 +203,30 @@ export default function EditLeadMagnetPanel({ onPreviewClick }: EditLeadMagnetPa
   const handleStyleUpdate = (property: string, value: string) => {
     if (selectedElement) {
       (selectedElement.style as any)[property] = value;
+      
+      // For fontWeight, normalize the value for the dropdown
+      const normalizedValue = property === 'fontWeight' ? normalizeFontWeight(value) : value;
+      
       setSelectedStyles(prev => ({
         ...prev,
-        [property]: value
+        [property]: normalizedValue
       }));
+    }
+  };
+
+  // Handle image URL update
+  const handleImageUpdate = (newUrl: string) => {
+    if (selectedElement && selectedElement instanceof HTMLImageElement) {
+      selectedElement.src = newUrl;
+      setSelectedImageUrl(newUrl);
+    }
+  };
+
+  // Handle icon update
+  const handleIconUpdate = (newIconHtml: string) => {
+    if (selectedElement) {
+      selectedElement.innerHTML = newIconHtml;
+      setSelectedIconHtml(newIconHtml);
     }
   };
 
@@ -116,8 +273,14 @@ export default function EditLeadMagnetPanel({ onPreviewClick }: EditLeadMagnetPa
         {/* Edit Panel */}
         <EditPanel 
           selectedElement={selectedElement}
+          selectedElementType={selectedElementType}
           selectedStyles={selectedStyles}
+          selectedImageUrl={selectedImageUrl}
+          selectedIconHtml={selectedIconHtml}
           onStyleUpdate={handleStyleUpdate}
+          onImageUpdate={handleImageUpdate}
+          onIconUpdate={handleIconUpdate}
+          onModeChange={(mode) => setCurrentMode(mode)}
         />
         {/* Result Panel */}
         <div className="bg-white flex flex-1 flex-col h-full items-center justify-between min-h-0 min-w-px relative" data-name="Result Panel">
@@ -127,22 +290,6 @@ export default function EditLeadMagnetPanel({ onPreviewClick }: EditLeadMagnetPa
               {/* PAGES Label */}
               <span className="font-medium text-[12px] text-[#211951] mr-1" style={{ letterSpacing: '0.1em' }}>PAGES</span>
 
-              {/* Data Capture Page Tab */}
-              <button
-                onClick={() => setActivePage('dataCapture')}
-                className={`${
-                  activePage === 'dataCapture' ? 'bg-[#16F5BA] text-brand-navy' : 'bg-white text-brand-navy'
-                } rounded-lg px-4 h-[34px] cursor-pointer transition-all hover:shadow-md font-medium text-sm`}
-              >
-                Data Capture
-              </button>
-
-              {/* Arrow */}
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M3.33301 8H12.6663" stroke="#211951" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M8 3.3335L12.6667 8.00016L8 12.6668" stroke="#211951" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-
               {/* Quiz Page Tab */}
               <button
                 onClick={() => setActivePage('gate')}
@@ -151,6 +298,22 @@ export default function EditLeadMagnetPanel({ onPreviewClick }: EditLeadMagnetPa
                 } rounded-lg px-4 h-[34px] cursor-pointer transition-all hover:shadow-md font-medium text-sm`}
               >
                 Quiz
+              </button>
+
+              {/* Arrow */}
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3.33301 8H12.6663" stroke="#211951" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M8 3.3335L12.6667 8.00016L8 12.6668" stroke="#211951" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+
+              {/* Data Capture Page Tab */}
+              <button
+                onClick={() => setActivePage('dataCapture')}
+                className={`${
+                  activePage === 'dataCapture' ? 'bg-[#16F5BA] text-brand-navy' : 'bg-white text-brand-navy'
+                } rounded-lg px-4 h-[34px] cursor-pointer transition-all hover:shadow-md font-medium text-sm`}
+              >
+                Data Capture
               </button>
 
               {/* Arrow */}
@@ -170,8 +333,19 @@ export default function EditLeadMagnetPanel({ onPreviewClick }: EditLeadMagnetPa
               </button>
             </div>
             
-            {/* Device Selector Dropdown */}
-            <div className="relative">
+            <div className="flex gap-2 items-center">
+              {/* Undo Button */}
+              <button
+                onClick={() => {}}
+                className="bg-brand-gray border border-[rgba(131,111,255,0.2)] border-solid box-border flex gap-2 h-[34px] items-center px-3 py-[5px] rounded-lg transition-all cursor-pointer hover:bg-[rgba(131,111,255,0.15)] hover:border-brand-purple hover:shadow-sm active:scale-95 active:bg-[rgba(131,111,255,0.25)]"
+              >
+                <p className="font-medium leading-normal text-sm text-brand-navy">
+                  Undo
+                </p>
+              </button>
+
+              {/* Device Selector Dropdown */}
+              <div className="relative">
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                 className="bg-brand-gray border border-[rgba(131,111,255,0.2)] border-solid box-border flex gap-2 h-[34px] items-center pl-3 pr-2 py-[5px] rounded-lg hover:bg-opacity-90 transition-all cursor-pointer"
@@ -217,6 +391,7 @@ export default function EditLeadMagnetPanel({ onPreviewClick }: EditLeadMagnetPa
                   ))}
                 </div>
               )}
+              </div>
             </div>
           </div>
 
@@ -252,69 +427,79 @@ export default function EditLeadMagnetPanel({ onPreviewClick }: EditLeadMagnetPa
                   <div className="flex-1">
                     <p 
                       onClick={handleElementClick}
-                      className="text-[8px] font-semibold text-gray-600 mb-2 uppercase tracking-wide hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+                      className={`text-[8px] font-semibold text-gray-600 mb-2 uppercase tracking-wide ${getTextHoverClass()}`}
                     >
                       ZORVO
                     </p>
                     <h1 
                       onClick={handleElementClick}
-                      className="text-xl font-bold mb-3 leading-tight hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+                      className={`text-xl font-bold mb-3 leading-tight ${getTextHoverClass()}`}
                     >
-                      Unlock Your Starfish Potential with the Starfish Quiz!
+                      Get Your Personalized Starfish Results!
                     </h1>
                     <p 
                       onClick={handleElementClick}
-                      className="text-gray-700 mb-4 text-xs leading-relaxed hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+                      className={`text-gray-700 mb-4 text-xs leading-relaxed ${getTextHoverClass()}`}
                     >
-                      Discover your starfish's hidden talents and needs with our fun and informative quiz. Get personalized insights to ensure a happy and healthy starfish.
+                      To receive your personalized starfish profile and care recommendations, enter your email below. We'll send you a detailed report tailored to your starfish's unique personality.
                     </p>
                     <div className="space-y-2">
                       <div className="flex items-center gap-1.5">
-                        <div className="w-3 h-3 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
+                        <div 
+                          onClick={handleIconClick}
+                          className={`w-3 h-3 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 ${getIconClass()}`}
+                        >
                           <svg className="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                           </svg>
                         </div>
                         <span 
                           onClick={handleElementClick}
-                          className="text-xs text-gray-700 hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+                          className={`text-xs text-gray-700 ${getTextHoverClass()}`}
                         >
-                          Understand your starfish's unique personality
+                          Your starfish's unique personality profile
                         </span>
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <div className="w-3 h-3 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
+                        <div 
+                          onClick={handleIconClick}
+                          className={`w-3 h-3 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 ${getIconClass()}`}
+                        >
                           <svg className="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                           </svg>
                         </div>
                         <span 
                           onClick={handleElementClick}
-                          className="text-xs text-gray-700 hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+                          className={`text-xs text-gray-700 ${getTextHoverClass()}`}
                         >
-                          Get tailored care tips for optimal health
+                          Tailored care tips for optimal health
                         </span>
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <div className="w-3 h-3 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
+                        <div 
+                          onClick={handleIconClick}
+                          className={`w-3 h-3 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 ${getIconClass()}`}
+                        >
                           <svg className="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                           </svg>
                         </div>
                         <span 
                           onClick={handleElementClick}
-                          className="text-xs text-gray-700 hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+                          className={`text-xs text-gray-700 ${getTextHoverClass()}`}
                         >
-                          Learn how to create the perfect starfish habitat
+                          Expert recommendations for the perfect habitat
                         </span>
                       </div>
                     </div>
                   </div>
                   <div className="flex-shrink-0">
                     <img 
+                      onClick={handleImageClick}
                       src="https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=300&h=300&fit=crop" 
                       alt="A vibrant starfish on a sandy seabed"
-                      className="w-32 h-32 object-cover rounded-lg shadow-lg"
+                      className={`w-32 h-32 object-cover rounded-lg shadow-lg ${getTextHoverClass()} cursor-pointer`}
                     />
                   </div>
                 </div>
@@ -325,23 +510,29 @@ export default function EditLeadMagnetPanel({ onPreviewClick }: EditLeadMagnetPa
                 <div className="max-w-xs mx-auto">
                   <h2 
                     onClick={handleElementClick}
-                    className="text-base font-bold text-center mb-3 hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+                    className={`text-base font-bold text-center mb-3 ${getTextHoverClass()}`}
                   >
-                    Take the Starfish Quiz Now!
+                    Enter Your Email to Get Your Results
                   </h2>
                   
                   <div className="mb-3">
                     <label 
                       onClick={handleElementClick}
-                      className="block text-[10px] text-gray-600 mb-1 hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+                      className={`block text-[10px] text-gray-600 mb-1 ${getTextHoverClass()}`}
                     >
                       Email Address
                     </label>
                     <div className="relative">
-                      <svg className="absolute left-2 top-1/2 transform -translate-y-1/2 w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg 
+                        onClick={handleIconClick}
+                        className={`absolute left-2 top-1/2 transform -translate-y-1/2 w-3 h-3 text-gray-400 ${getIconClass()} rounded`} 
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                      >
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                       </svg>
-                      <div className="w-full pl-7 pr-3 py-2 border border-gray-300 rounded-lg text-[10px] text-gray-400">
+                      <div className={`w-full pl-7 pr-3 py-2 border border-gray-300 rounded-lg text-[10px] text-gray-400 ${getInputClass()}`}>
                         your.email@example.com
                       </div>
                     </div>
@@ -351,7 +542,7 @@ export default function EditLeadMagnetPanel({ onPreviewClick }: EditLeadMagnetPa
                     <div className="w-3 h-3 border border-gray-300 rounded mt-0.5 flex-shrink-0"></div>
                     <label 
                       onClick={handleElementClick}
-                      className="text-[9px] text-gray-600 leading-tight hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+                      className={`text-[9px] text-gray-600 leading-tight ${getTextHoverClass()}`}
                     >
                       I agree to the Privacy Policy and Terms of Service
                     </label>
@@ -359,14 +550,14 @@ export default function EditLeadMagnetPanel({ onPreviewClick }: EditLeadMagnetPa
 
                   <div 
                     onClick={handleElementClick}
-                    className="w-full bg-brand-purple text-white py-2 rounded-lg font-semibold text-xs text-center hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+                    className={`w-full bg-brand-purple text-white py-2 rounded-lg font-semibold text-xs text-center ${getButtonClass()}`}
                   >
-                    Discover My Starfish's Potential
+                    Get My Personalized Results
                   </div>
 
                   <p 
                     onClick={handleElementClick}
-                    className="text-[9px] text-gray-500 text-center mt-2 hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+                    className={`text-[9px] text-gray-500 text-center mt-2 ${getTextHoverClass()}`}
                   >
                     We respect your privacy. Unsubscribe at any time.
                   </p>
@@ -377,7 +568,7 @@ export default function EditLeadMagnetPanel({ onPreviewClick }: EditLeadMagnetPa
               <div className="px-6 py-6 bg-gray-50">
                 <h2 
                   onClick={handleElementClick}
-                  className="text-base font-bold text-center mb-4 hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+                  className={`text-base font-bold text-center mb-4 ${getTextHoverClass()}`}
                 >
                   What Starfish Owners Are Saying
                 </h2>
@@ -393,7 +584,7 @@ export default function EditLeadMagnetPanel({ onPreviewClick }: EditLeadMagnetPa
                     </div>
                     <p 
                       onClick={handleElementClick}
-                      className="text-[10px] text-gray-700 mb-2 italic hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+                      className={`text-[10px] text-gray-700 mb-2 italic ${getTextHoverClass()}`}
                     >
                       "I never knew my starfish had such a unique personality!"
                     </p>
@@ -404,13 +595,13 @@ export default function EditLeadMagnetPanel({ onPreviewClick }: EditLeadMagnetPa
                       <div>
                         <p 
                           onClick={handleElementClick}
-                          className="font-semibold text-[10px] hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+                          className={`font-semibold text-[10px] ${getTextHoverClass()}`}
                         >
                           Alice Smith
                         </p>
                         <p 
                           onClick={handleElementClick}
-                          className="text-[8px] text-gray-500 hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+                          className={`text-[8px] text-gray-500 ${getTextHoverClass()}`}
                         >
                           Starfish Enthusiast
                         </p>
@@ -428,7 +619,7 @@ export default function EditLeadMagnetPanel({ onPreviewClick }: EditLeadMagnetPa
                     </div>
                     <p 
                       onClick={handleElementClick}
-                      className="text-[10px] text-gray-700 mb-2 italic hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+                      className={`text-[10px] text-gray-700 mb-2 italic ${getTextHoverClass()}`}
                     >
                       "The tailored care tips were a game-changer!"
                     </p>
@@ -439,13 +630,13 @@ export default function EditLeadMagnetPanel({ onPreviewClick }: EditLeadMagnetPa
                       <div>
                         <p 
                           onClick={handleElementClick}
-                          className="font-semibold text-[10px] hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+                          className={`font-semibold text-[10px] ${getTextHoverClass()}`}
                         >
                           Robert Davis
                         </p>
                         <p 
                           onClick={handleElementClick}
-                          className="text-[8px] text-gray-500 hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+                          className={`text-[8px] text-gray-500 ${getTextHoverClass()}`}
                         >
                           Aquarium Hobbyist
                         </p>
@@ -463,7 +654,7 @@ export default function EditLeadMagnetPanel({ onPreviewClick }: EditLeadMagnetPa
                     </div>
                     <p 
                       onClick={handleElementClick}
-                      className="text-[10px] text-gray-700 mb-2 italic hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+                      className={`text-[10px] text-gray-700 mb-2 italic ${getTextHoverClass()}`}
                     >
                       "I was struggling to create the right habitat for my starfish, but this quiz provided all the answers I needed!"
                     </p>
@@ -474,13 +665,13 @@ export default function EditLeadMagnetPanel({ onPreviewClick }: EditLeadMagnetPa
                       <div>
                         <p 
                           onClick={handleElementClick}
-                          className="font-semibold text-[10px] hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+                          className={`font-semibold text-[10px] ${getTextHoverClass()}`}
                         >
                           Jane Miller
                         </p>
                         <p 
                           onClick={handleElementClick}
-                          className="text-[8px] text-gray-500 hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+                          className={`text-[8px] text-gray-500 ${getTextHoverClass()}`}
                         >
                           Marine Biologist Student
                         </p>
@@ -494,72 +685,81 @@ export default function EditLeadMagnetPanel({ onPreviewClick }: EditLeadMagnetPa
               <div className="px-6 py-6 bg-white">
                 <h2 
                   onClick={handleElementClick}
-                  className="text-base font-bold text-center mb-4 hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+                  className={`text-base font-bold text-center mb-4 ${getTextHoverClass()}`}
                 >
-                  Why Take the Starfish Quiz?
+                  What You'll Receive
                 </h2>
                 
                 <div className="grid grid-cols-3 gap-4">
                   {/* Benefit 1 */}
                   <div className="text-center">
-                    <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                    <div 
+                      onClick={handleIconClick}
+                      className={`w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2 ${getIconClass()}`}
+                    >
                       <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                       </svg>
                     </div>
                     <h3 
                       onClick={handleElementClick}
-                      className="font-bold text-xs mb-1 hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+                      className={`font-bold text-xs mb-1 ${getTextHoverClass()}`}
                     >
-                      Quick & Easy
+                      Instant Results
                     </h3>
                     <p 
                       onClick={handleElementClick}
-                      className="text-[9px] text-gray-600 hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+                      className={`text-[9px] text-gray-600 ${getTextHoverClass()}`}
                     >
-                      Get instant insights into your starfish's needs with our user-friendly quiz.
+                      Receive your personalized starfish profile and insights immediately via email.
                     </p>
                   </div>
 
                   {/* Benefit 2 */}
                   <div className="text-center">
-                    <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                    <div 
+                      onClick={handleIconClick}
+                      className={`w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2 ${getIconClass()}`}
+                    >
                       <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     </div>
                     <h3 
                       onClick={handleElementClick}
-                      className="font-bold text-xs mb-1 hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+                      className={`font-bold text-xs mb-1 ${getTextHoverClass()}`}
                     >
-                      Free & Valuable
+                      Completely Free
                     </h3>
                     <p 
                       onClick={handleElementClick}
-                      className="text-[9px] text-gray-600 hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+                      className={`text-[9px] text-gray-600 ${getTextHoverClass()}`}
                     >
-                      Access expert advice and personalized recommendations without spending a dime.
+                      Get expert advice and personalized recommendations at no cost to you.
                     </p>
                   </div>
 
                   {/* Benefit 3 */}
                   <div className="text-center">
-                    <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                    <div 
+                      onClick={handleIconClick}
+                      className={`w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2 ${getIconClass()}`}
+                    >
                       <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                       </svg>
                     </div>
                     <h3 
                       onClick={handleElementClick}
-                      className="font-bold text-xs mb-1 hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+                      className={`font-bold text-xs mb-1 ${getTextHoverClass()}`}
                     >
                       Expert-Backed
                     </h3>
                     <p 
                       onClick={handleElementClick}
-                      className="text-[9px] text-gray-600 hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+                      className={`text-[9px] text-gray-600 ${getTextHoverClass()}`}
                     >
-                      Benefit from knowledge curated by marine biologists and starfish care specialists.
+                      Results based on research by marine biologists and starfish care specialists.
                     </p>
                   </div>
                 </div>
@@ -575,19 +775,19 @@ export default function EditLeadMagnetPanel({ onPreviewClick }: EditLeadMagnetPa
         <div className="bg-gradient-to-br from-purple-100 via-pink-50 to-white px-6 py-6 text-center">
           <p 
             onClick={handleElementClick}
-            className="text-[8px] font-semibold text-gray-600 mb-2 uppercase tracking-wide hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+            className={`text-[8px] font-semibold text-gray-600 mb-2 uppercase tracking-wide ${getTextHoverClass()}`}
           >
             ZORVO
           </p>
           <h1 
             onClick={handleElementClick}
-            className="text-xl font-bold mb-2 hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+            className={`text-xl font-bold mb-2 ${getTextHoverClass()}`}
           >
             Starfish Personality Quiz
           </h1>
           <p 
             onClick={handleElementClick}
-            className="text-gray-600 text-xs hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+            className={`text-gray-600 text-xs ${getTextHoverClass()}`}
           >
             Answer these questions to discover your starfish's unique traits
           </p>
@@ -598,13 +798,13 @@ export default function EditLeadMagnetPanel({ onPreviewClick }: EditLeadMagnetPa
           <div className="flex items-center justify-between mb-1">
             <span 
               onClick={handleElementClick}
-              className="text-[10px] font-medium text-gray-600 hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+              className={`text-[10px] font-medium text-gray-600 ${getTextHoverClass()}`}
             >
               Question 3 of 8
             </span>
             <span 
               onClick={handleElementClick}
-              className="text-[10px] font-medium text-brand-purple hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+              className={`text-[10px] font-medium text-brand-purple ${getTextHoverClass()}`}
             >
               37% Complete
             </span>
@@ -619,26 +819,39 @@ export default function EditLeadMagnetPanel({ onPreviewClick }: EditLeadMagnetPa
           <div className="max-w-xl mx-auto">
             <h2 
               onClick={handleElementClick}
-              className="text-base font-bold mb-4 text-center hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+              className={`text-base font-bold mb-4 text-center ${getTextHoverClass()}`}
             >
               How active is your starfish during feeding time?
             </h2>
             
             <div className="space-y-2">
               {/* Answer Option 1 */}
-              <button className="w-full text-left p-3 border-2 border-gray-200 rounded-lg hover:border-brand-purple hover:bg-purple-50 transition-all">
+              <button 
+                onClick={() => handleQuizAnswerClick(1)}
+                className={`w-full text-left p-3 border-2 rounded-lg transition-all ${
+                  selectedQuizAnswer === 1 
+                    ? 'border-brand-purple bg-purple-50' 
+                    : 'border-gray-200 hover:border-brand-purple hover:bg-purple-50'
+                } ${currentMode === 'design' ? 'cursor-default' : 'cursor-pointer'}`}
+              >
                 <div className="flex items-start gap-2">
-                  <div className="w-4 h-4 rounded-full border-2 border-gray-300 flex-shrink-0 mt-0.5"></div>
+                  <div className={`w-4 h-4 rounded-full border-2 flex-shrink-0 mt-0.5 flex items-center justify-center ${
+                    selectedQuizAnswer === 1 ? 'border-brand-purple' : 'border-gray-300'
+                  }`}>
+                    {selectedQuizAnswer === 1 && (
+                      <div className="w-2 h-2 rounded-full bg-brand-purple"></div>
+                    )}
+                  </div>
                   <div>
                     <h3 
                       onClick={handleElementClick}
-                      className="font-semibold text-xs mb-1 hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+                      className={`font-semibold text-xs mb-1 ${getTextHoverClass()}`}
                     >
                       Very active and eager
                     </h3>
                     <p 
                       onClick={handleElementClick}
-                      className="text-gray-600 text-[9px] hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+                      className={`text-gray-600 text-[9px] ${getTextHoverClass()}`}
                     >
                       Immediately moves toward food and shows excitement
                     </p>
@@ -647,19 +860,32 @@ export default function EditLeadMagnetPanel({ onPreviewClick }: EditLeadMagnetPa
               </button>
 
               {/* Answer Option 2 */}
-              <button className="w-full text-left p-3 border-2 border-gray-200 rounded-lg hover:border-brand-purple hover:bg-purple-50 transition-all">
+              <button 
+                onClick={() => handleQuizAnswerClick(2)}
+                className={`w-full text-left p-3 border-2 rounded-lg transition-all ${
+                  selectedQuizAnswer === 2 
+                    ? 'border-brand-purple bg-purple-50' 
+                    : 'border-gray-200 hover:border-brand-purple hover:bg-purple-50'
+                } ${currentMode === 'design' ? 'cursor-default' : 'cursor-pointer'}`}
+              >
                 <div className="flex items-start gap-2">
-                  <div className="w-4 h-4 rounded-full border-2 border-gray-300 flex-shrink-0 mt-0.5"></div>
+                  <div className={`w-4 h-4 rounded-full border-2 flex-shrink-0 mt-0.5 flex items-center justify-center ${
+                    selectedQuizAnswer === 2 ? 'border-brand-purple' : 'border-gray-300'
+                  }`}>
+                    {selectedQuizAnswer === 2 && (
+                      <div className="w-2 h-2 rounded-full bg-brand-purple"></div>
+                    )}
+                  </div>
                   <div>
                     <h3 
                       onClick={handleElementClick}
-                      className="font-semibold text-xs mb-1 hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+                      className={`font-semibold text-xs mb-1 ${getTextHoverClass()}`}
                     >
                       Moderately active
                     </h3>
                     <p 
                       onClick={handleElementClick}
-                      className="text-gray-600 text-[9px] hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+                      className={`text-gray-600 text-[9px] ${getTextHoverClass()}`}
                     >
                       Takes a moment but then approaches food steadily
                     </p>
@@ -668,19 +894,32 @@ export default function EditLeadMagnetPanel({ onPreviewClick }: EditLeadMagnetPa
               </button>
 
               {/* Answer Option 3 */}
-              <button className="w-full text-left p-3 border-2 border-gray-200 rounded-lg hover:border-brand-purple hover:bg-purple-50 transition-all">
+              <button 
+                onClick={() => handleQuizAnswerClick(3)}
+                className={`w-full text-left p-3 border-2 rounded-lg transition-all ${
+                  selectedQuizAnswer === 3 
+                    ? 'border-brand-purple bg-purple-50' 
+                    : 'border-gray-200 hover:border-brand-purple hover:bg-purple-50'
+                } ${currentMode === 'design' ? 'cursor-default' : 'cursor-pointer'}`}
+              >
                 <div className="flex items-start gap-2">
-                  <div className="w-4 h-4 rounded-full border-2 border-gray-300 flex-shrink-0 mt-0.5"></div>
+                  <div className={`w-4 h-4 rounded-full border-2 flex-shrink-0 mt-0.5 flex items-center justify-center ${
+                    selectedQuizAnswer === 3 ? 'border-brand-purple' : 'border-gray-300'
+                  }`}>
+                    {selectedQuizAnswer === 3 && (
+                      <div className="w-2 h-2 rounded-full bg-brand-purple"></div>
+                    )}
+                  </div>
                   <div>
                     <h3 
                       onClick={handleElementClick}
-                      className="font-semibold text-xs mb-1 hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+                      className={`font-semibold text-xs mb-1 ${getTextHoverClass()}`}
                     >
                       Calm and patient
                     </h3>
                     <p 
                       onClick={handleElementClick}
-                      className="text-gray-600 text-[9px] hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+                      className={`text-gray-600 text-[9px] ${getTextHoverClass()}`}
                     >
                       Waits and approaches food slowly and deliberately
                     </p>
@@ -689,19 +928,32 @@ export default function EditLeadMagnetPanel({ onPreviewClick }: EditLeadMagnetPa
               </button>
 
               {/* Answer Option 4 */}
-              <button className="w-full text-left p-3 border-2 border-gray-200 rounded-lg hover:border-brand-purple hover:bg-purple-50 transition-all">
+              <button 
+                onClick={() => handleQuizAnswerClick(4)}
+                className={`w-full text-left p-3 border-2 rounded-lg transition-all ${
+                  selectedQuizAnswer === 4 
+                    ? 'border-brand-purple bg-purple-50' 
+                    : 'border-gray-200 hover:border-brand-purple hover:bg-purple-50'
+                } ${currentMode === 'design' ? 'cursor-default' : 'cursor-pointer'}`}
+              >
                 <div className="flex items-start gap-2">
-                  <div className="w-4 h-4 rounded-full border-2 border-gray-300 flex-shrink-0 mt-0.5"></div>
+                  <div className={`w-4 h-4 rounded-full border-2 flex-shrink-0 mt-0.5 flex items-center justify-center ${
+                    selectedQuizAnswer === 4 ? 'border-brand-purple' : 'border-gray-300'
+                  }`}>
+                    {selectedQuizAnswer === 4 && (
+                      <div className="w-2 h-2 rounded-full bg-brand-purple"></div>
+                    )}
+                  </div>
                   <div>
                     <h3 
                       onClick={handleElementClick}
-                      className="font-semibold text-xs mb-1 hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+                      className={`font-semibold text-xs mb-1 ${getTextHoverClass()}`}
                     >
                       Not very interested
                     </h3>
                     <p 
                       onClick={handleElementClick}
-                      className="text-gray-600 text-[9px] hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+                      className={`text-gray-600 text-[9px] ${getTextHoverClass()}`}
                     >
                       Shows minimal response to feeding time
                     </p>
@@ -736,20 +988,23 @@ export default function EditLeadMagnetPanel({ onPreviewClick }: EditLeadMagnetPa
       <>
         {/* Results Header */}
         <div className="bg-gradient-to-br from-purple-100 via-pink-50 to-white px-6 py-8 text-center">
-          <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-3">
+          <div 
+            onClick={handleIconClick}
+            className={`w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-3 ${getIconClass()}`}
+          >
             <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
             </svg>
           </div>
           <h1 
             onClick={handleElementClick}
-            className="text-xl font-bold mb-2 hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+            className={`text-xl font-bold mb-2 ${getTextHoverClass()}`}
           >
             Your Starfish Profile: The Explorer!
           </h1>
           <p 
             onClick={handleElementClick}
-            className="text-gray-700 text-xs max-w-md mx-auto hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+            className={`text-gray-700 text-xs max-w-md mx-auto ${getTextHoverClass()}`}
           >
             Congratulations! Your starfish has a curious and adventurous personality. Here's what we learned about your marine friend.
           </p>
@@ -759,7 +1014,7 @@ export default function EditLeadMagnetPanel({ onPreviewClick }: EditLeadMagnetPa
         <div className="px-6 py-6 bg-white">
           <h2 
             onClick={handleElementClick}
-            className="text-base font-bold text-center mb-5 hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+            className={`text-base font-bold text-center mb-5 ${getTextHoverClass()}`}
           >
             Personality Traits
           </h2>
@@ -767,21 +1022,24 @@ export default function EditLeadMagnetPanel({ onPreviewClick }: EditLeadMagnetPa
           <div className="grid grid-cols-2 gap-3 max-w-lg mx-auto">
             <div className="bg-purple-50 p-3 rounded-lg">
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-6 h-6 bg-brand-purple rounded-full flex items-center justify-center">
+                <div 
+                  onClick={handleIconClick}
+                  className={`w-6 h-6 bg-brand-purple rounded-full flex items-center justify-center ${getIconClass()}`}
+                >
                   <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
                 </div>
                 <h3 
                   onClick={handleElementClick}
-                  className="font-bold text-xs hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+                  className={`font-bold text-xs ${getTextHoverClass()}`}
                 >
                   Active
                 </h3>
               </div>
               <p 
                 onClick={handleElementClick}
-                className="text-gray-700 text-[9px] hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+                className={`text-gray-700 text-[9px] ${getTextHoverClass()}`}
               >
                 Your starfish enjoys exploring its environment and is quite energetic.
               </p>
@@ -789,21 +1047,24 @@ export default function EditLeadMagnetPanel({ onPreviewClick }: EditLeadMagnetPa
 
             <div className="bg-purple-50 p-3 rounded-lg">
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-6 h-6 bg-brand-purple rounded-full flex items-center justify-center">
+                <div 
+                  onClick={handleIconClick}
+                  className={`w-6 h-6 bg-brand-purple rounded-full flex items-center justify-center ${getIconClass()}`}
+                >
                   <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                   </svg>
                 </div>
                 <h3 
                   onClick={handleElementClick}
-                  className="font-bold text-xs hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+                  className={`font-bold text-xs ${getTextHoverClass()}`}
                 >
                   Social
                 </h3>
               </div>
               <p 
                 onClick={handleElementClick}
-                className="text-gray-700 text-[9px] hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+                className={`text-gray-700 text-[9px] ${getTextHoverClass()}`}
               >
                 Shows interest in tankmates and interactive feeding sessions.
               </p>
@@ -811,21 +1072,24 @@ export default function EditLeadMagnetPanel({ onPreviewClick }: EditLeadMagnetPa
 
             <div className="bg-purple-50 p-3 rounded-lg">
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-6 h-6 bg-brand-purple rounded-full flex items-center justify-center">
+                <div 
+                  onClick={handleIconClick}
+                  className={`w-6 h-6 bg-brand-purple rounded-full flex items-center justify-center ${getIconClass()}`}
+                >
                   <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                   </svg>
                 </div>
                 <h3 
                   onClick={handleElementClick}
-                  className="font-bold text-xs hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+                  className={`font-bold text-xs ${getTextHoverClass()}`}
                 >
                   Curious
                 </h3>
               </div>
               <p 
                 onClick={handleElementClick}
-                className="text-gray-700 text-[9px] hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+                className={`text-gray-700 text-[9px] ${getTextHoverClass()}`}
               >
                 Loves to investigate new objects and changes in the habitat.
               </p>
@@ -833,21 +1097,24 @@ export default function EditLeadMagnetPanel({ onPreviewClick }: EditLeadMagnetPa
 
             <div className="bg-purple-50 p-3 rounded-lg">
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-6 h-6 bg-brand-purple rounded-full flex items-center justify-center">
+                <div 
+                  onClick={handleIconClick}
+                  className={`w-6 h-6 bg-brand-purple rounded-full flex items-center justify-center ${getIconClass()}`}
+                >
                   <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                   </svg>
                 </div>
                 <h3 
                   onClick={handleElementClick}
-                  className="font-bold text-xs hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+                  className={`font-bold text-xs ${getTextHoverClass()}`}
                 >
                   Healthy
                 </h3>
               </div>
               <p 
                 onClick={handleElementClick}
-                className="text-gray-700 text-[9px] hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+                className={`text-gray-700 text-[9px] ${getTextHoverClass()}`}
               >
                 Displays good appetite and normal regeneration patterns.
               </p>
@@ -859,7 +1126,7 @@ export default function EditLeadMagnetPanel({ onPreviewClick }: EditLeadMagnetPa
         <div className="px-6 py-6 bg-gray-50">
           <h2 
             onClick={handleElementClick}
-            className="text-base font-bold text-center mb-5 hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+            className={`text-base font-bold text-center mb-5 ${getTextHoverClass()}`}
           >
             Personalized Care Tips
           </h2>
@@ -874,13 +1141,13 @@ export default function EditLeadMagnetPanel({ onPreviewClick }: EditLeadMagnetPa
               <div>
                 <h3 
                   onClick={handleElementClick}
-                  className="font-bold text-xs mb-1 hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+                  className={`font-bold text-xs mb-1 ${getTextHoverClass()}`}
                 >
                   Enrichment Activities
                 </h3>
                 <p 
                   onClick={handleElementClick}
-                  className="text-gray-700 text-[9px] hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+                  className={`text-gray-700 text-[9px] ${getTextHoverClass()}`}
                 >
                   Provide varied textures and objects for exploration. Rotate decorations monthly to keep things interesting.
                 </p>
@@ -896,13 +1163,13 @@ export default function EditLeadMagnetPanel({ onPreviewClick }: EditLeadMagnetPa
               <div>
                 <h3 
                   onClick={handleElementClick}
-                  className="font-bold text-xs mb-1 hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+                  className={`font-bold text-xs mb-1 ${getTextHoverClass()}`}
                 >
                   Feeding Schedule
                 </h3>
                 <p 
                   onClick={handleElementClick}
-                  className="text-gray-700 text-[9px] hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+                  className={`text-gray-700 text-[9px] ${getTextHoverClass()}`}
                 >
                   Feed 2-3 times per week with varied diet. Your active starfish may benefit from slightly more frequent feeding.
                 </p>
@@ -918,13 +1185,13 @@ export default function EditLeadMagnetPanel({ onPreviewClick }: EditLeadMagnetPa
               <div>
                 <h3 
                   onClick={handleElementClick}
-                  className="font-bold text-xs mb-1 hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+                  className={`font-bold text-xs mb-1 ${getTextHoverClass()}`}
                 >
                   Tank Maintenance
                 </h3>
                 <p 
                   onClick={handleElementClick}
-                  className="text-gray-700 text-[9px] hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all"
+                  className={`text-gray-700 text-[9px] ${getTextHoverClass()}`}
                 >
                   Maintain stable water parameters. Explorer personalities thrive with consistent conditions and gentle water flow.
                 </p>
@@ -949,7 +1216,7 @@ export default function EditLeadMagnetPanel({ onPreviewClick }: EditLeadMagnetPa
           </p>
           <button 
             onClick={handleElementClick}
-            className="bg-brand-purple text-white px-5 py-2 rounded-lg font-semibold text-xs hover:bg-opacity-90 transition-all"
+            className={`bg-brand-purple text-white px-5 py-2 rounded-lg font-semibold text-xs ${getButtonClass()}`}
           >
             Download Full Report (PDF)
           </button>

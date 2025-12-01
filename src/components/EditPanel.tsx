@@ -1,9 +1,42 @@
 import { useState, useRef, useEffect } from 'react';
-import { ArrowUp } from 'lucide-react';
+import { 
+  ArrowUp, 
+  Check, 
+  X, 
+  Heart, 
+  Star, 
+  Mail, 
+  Phone, 
+  MapPin, 
+  User, 
+  Settings, 
+  Search, 
+  Home,
+  Calendar
+} from 'lucide-react';
 import SideMenu from './SideMenu';
 
 // Edit icon
 import img27 from '../assets/icons/edit.svg';
+
+// Helper function to convert RGB/RGBA to Hex
+function rgbToHex(color: string): string {
+  // If already hex, return as is
+  if (color.startsWith('#')) return color;
+  
+  // Match RGB or RGBA values
+  const match = color.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*[\d.]+)?\)$/);
+  if (!match) return '#000000';
+  
+  const r = parseInt(match[1]);
+  const g = parseInt(match[2]);
+  const b = parseInt(match[3]);
+  
+  return '#' + [r, g, b].map(x => {
+    const hex = x.toString(16);
+    return hex.length === 1 ? '0' + hex : hex;
+  }).join('');
+}
 
 type ModeType = 'chat' | 'design' | 'controls' | 'brand' | 'code' | 'settings';
 
@@ -15,17 +48,38 @@ type Message = {
 };
 
 type EditPanelProps = {
-  selectedElement?: HTMLElement | null;
+  selectedElement?: HTMLElement | SVGElement | null;
+  selectedElementType?: 'text' | 'image' | 'icon' | null;
   selectedStyles?: {
     textAlign: string;
     color: string;
     fontWeight: string;
     fontSize: string;
+    fontFamily: string;
   };
+  selectedImageUrl?: string;
+  selectedIconHtml?: string;
   onStyleUpdate?: (property: string, value: string) => void;
+  onImageUpdate?: (newUrl: string) => void;
+  onIconUpdate?: (newIconHtml: string) => void;
+  onModeChange?: (mode: ModeType) => void;
 };
 
-export default function EditPanel({ selectedElement, selectedStyles, onStyleUpdate }: EditPanelProps = {}) {
+// Theme palette definitions
+const themePalettes = [
+  { id: 'ocean-blue', name: 'Ocean Blue', colors: ['#0047AB', '#4A90E2', '#1E3A8A', '#334155'] },
+  { id: 'forest-green', name: 'Forest Green', colors: ['#065F46', '#10B981', '#064E3B', '#334155'] },
+  { id: 'sunset-orange', name: 'Sunset Orange', colors: ['#C2410C', '#F97316', '#9A3412', '#334155'] },
+  { id: 'royal-purple', name: 'Royal Purple', colors: ['#6D28D9', '#A78BFA', '#5B21B6', '#334155'] },
+  { id: 'modern-gray', name: 'Modern Gray', colors: ['#1F2937', '#4B5563', '#6B7280', '#9CA3AF'] },
+  { id: 'creative-blue', name: 'Creative Blue', colors: ['#4F46E5', '#818CF8', '#14B8A6', '#1E40AF'] },
+  { id: 'pro-purple', name: 'Pro Purple', colors: ['#7C3AED', '#A78BFA', '#8B5CF6', '#A855F7'] },
+  { id: 'growth-green', name: 'Growth Green', colors: ['#047857', '#10B981', '#14B8A6', '#065F46'] },
+  { id: 'minimal-black', name: 'Minimal Black', colors: ['#000000', '#374151', '#6B7280', '#9CA3AF'] },
+  { id: 'design-pink', name: 'Design Pink', colors: ['#DB2777', '#EC4899', '#F472B6', '#BE185D'] },
+];
+
+export default function EditPanel({ selectedElement, selectedElementType, selectedStyles, selectedImageUrl, selectedIconHtml, onStyleUpdate, onImageUpdate, onIconUpdate, onModeChange }: EditPanelProps = {}) {
   const [activeMode, setActiveMode] = useState<ModeType>('chat');
   const [messages, setMessages] = useState<Message[]>([]);
   const [isThinking, setIsThinking] = useState(false);
@@ -33,8 +87,26 @@ export default function EditPanel({ selectedElement, selectedStyles, onStyleUpda
   const [showPrompts, setShowPrompts] = useState(true);
   const [hasInteracted, setHasInteracted] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [imageUrlInput, setImageUrlInput] = useState('');
+  const [activeImageTab, setActiveImageTab] = useState<'url' | 'upload' | 'generate'>('url');
+  const [activeIconTab, setActiveIconTab] = useState<'swap' | 'upload' | 'generate'>('swap');
+  const [selectedIcon, setSelectedIcon] = useState<string>('');
+  const [isThemeDropdownOpen, setIsThemeDropdownOpen] = useState(false);
+  const [selectedTheme, setSelectedTheme] = useState<string>('');
+  const [pageBgColor, setPageBgColor] = useState('#FFFFFF');
+  const [pageSecondaryBgColor, setPageSecondaryBgColor] = useState('#F0F0F0');
+  const [buttonPrimaryColor, setButtonPrimaryColor] = useState('#836FFF');
+  const [buttonSecondaryColor, setButtonSecondaryColor] = useState('#F1F3FF');
+  const [buttonCornerRadius, setButtonCornerRadius] = useState('8');
+  const [formBorderColor, setFormBorderColor] = useState('#D1D5DB');
+  const [formBackgroundColor, setFormBackgroundColor] = useState('#FFFFFF');
+  const [formBorderRadius, setFormBorderRadius] = useState('8');
+  const [cardBorderColor, setCardBorderColor] = useState('#E5E7EB');
+  const [cardBackgroundColor, setCardBackgroundColor] = useState('#FFFFFF');
+  const [cardBorderRadius, setCardBorderRadius] = useState('12');
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const themeDropdownRef = useRef<HTMLDivElement>(null);
 
   // Scroll to position latest messages at the top of the panel
   useEffect(() => {
@@ -49,15 +121,40 @@ export default function EditPanel({ selectedElement, selectedStyles, onStyleUpda
     }
   }, [messages, isThinking]);
 
-  // Automatically switch to design mode when an element is selected
+  // Notify parent when mode changes
   useEffect(() => {
-    if (selectedElement) {
-      setActiveMode('design');
-      if (isCollapsed) {
-        setIsCollapsed(false);
-      }
+    if (onModeChange) {
+      onModeChange(activeMode);
     }
-  }, [selectedElement, isCollapsed]);
+  }, [activeMode, onModeChange]);
+
+  // Update image URL input when an image is selected
+  useEffect(() => {
+    if (selectedImageUrl) {
+      setImageUrlInput(selectedImageUrl);
+    }
+  }, [selectedImageUrl]);
+
+  // Update icon when an icon is selected
+  useEffect(() => {
+    if (selectedIconHtml) {
+      setSelectedIcon(selectedIconHtml);
+    }
+  }, [selectedIconHtml]);
+
+  // Close theme dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (themeDropdownRef.current && !themeDropdownRef.current.contains(event.target as Node)) {
+        setIsThemeDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const handleSendMessage = () => {
     if (!inputValue.trim()) return;
@@ -162,7 +259,7 @@ export default function EditPanel({ selectedElement, selectedStyles, onStyleUpda
         {activeMode === 'chat' && (
           <>
             {/* Messages Container */}
-            <div ref={messagesContainerRef} className="flex-1 w-full overflow-y-auto flex flex-col" style={{ display: 'flex', flexDirection: 'column-reverse' }}>
+            <div ref={messagesContainerRef} className="flex-1 w-full overflow-y-auto flex flex-col edit-panel-scroll" style={{ display: 'flex', flexDirection: 'column-reverse' }}>
               
               {/* Thinking Indicator */}
               {isThinking && (
@@ -264,61 +361,426 @@ export default function EditPanel({ selectedElement, selectedStyles, onStyleUpda
         )}
 
         {activeMode === 'design' && (
-          <div className="flex flex-col flex-1 w-full overflow-y-auto p-4">
+          <div className="flex flex-col flex-1 w-full overflow-y-auto p-4 edit-panel-scroll">
             {!selectedElement ? (
               <div className="flex items-center justify-center flex-1">
-                <p className="text-white opacity-70 text-center">
+            <p className="text-white opacity-70 text-center">
                   Select an image, text or icon to start designing.
                 </p>
               </div>
+            ) : selectedElementType === 'image' ? (
+              <div className="space-y-6">
+                <h3 className="text-white font-semibold text-lg mb-4">Edit Image</h3>
+                
+                {/* Image Preview */}
+                <div className="w-full aspect-video bg-[rgba(255,255,255,0.05)] rounded-lg overflow-hidden flex items-center justify-center border border-[rgba(255,255,255,0.1)]">
+                  <img 
+                    src={imageUrlInput || selectedImageUrl}
+                    alt="Selected" 
+                    className="max-w-full max-h-full object-contain"
+                  />
+                </div>
+
+                {/* Tabs */}
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setActiveImageTab('url')}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      activeImageTab === 'url'
+                        ? 'bg-[rgba(255,255,255,0.15)] text-white'
+                        : 'bg-[rgba(255,255,255,0.05)] text-white/50 hover:bg-[rgba(255,255,255,0.1)] hover:text-white/70'
+                    }`}
+                  >
+                    URL
+                  </button>
+                  <button
+                    onClick={() => setActiveImageTab('upload')}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      activeImageTab === 'upload'
+                        ? 'bg-[rgba(255,255,255,0.15)] text-white'
+                        : 'bg-[rgba(255,255,255,0.05)] text-white/50 hover:bg-[rgba(255,255,255,0.1)] hover:text-white/70'
+                    }`}
+                  >
+                    Upload
+                  </button>
+                  <button
+                    onClick={() => setActiveImageTab('generate')}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      activeImageTab === 'generate'
+                        ? 'bg-[rgba(255,255,255,0.15)] text-white'
+                        : 'bg-[rgba(255,255,255,0.05)] text-white/50 hover:bg-[rgba(255,255,255,0.1)] hover:text-white/70'
+                    }`}
+                  >
+                    Generate
+                  </button>
+                </div>
+
+                {/* URL Tab Content */}
+                {activeImageTab === 'url' && (
+                  <div>
+                    <label className="text-white text-sm mb-2 block">Image URL</label>
+                    <input
+                      type="text"
+                      value={imageUrlInput}
+                      onChange={(e) => setImageUrlInput(e.target.value)}
+                      placeholder="https://example.com/image.jpg"
+                      className="w-full px-3 py-2 rounded-lg bg-[rgba(255,255,255,0.1)] text-white border border-[rgba(255,255,255,0.2)] focus:border-brand-purple focus:outline-none placeholder-white/30"
+                    />
+                  </div>
+                )}
+
+                {/* Upload Tab Content */}
+                {activeImageTab === 'upload' && (
+                  <div className="text-center py-8">
+                    <p className="text-white/50 text-sm">Upload functionality coming soon</p>
+                  </div>
+                )}
+
+                {/* Generate Tab Content */}
+                {activeImageTab === 'generate' && (
+                  <div className="text-center py-8">
+                    <p className="text-white/50 text-sm">AI generation coming soon</p>
+                  </div>
+                )}
+
+                {/* Action Buttons */}
+                <div className="flex gap-3 pt-4">
+                  <button
+                    onClick={() => {
+                      if (imageUrlInput && onImageUpdate) {
+                        onImageUpdate(imageUrlInput);
+                      }
+                    }}
+                    className="flex-1 bg-brand-purple text-white py-2.5 rounded-lg font-semibold text-sm hover:bg-opacity-90 transition-all"
+                  >
+                    Save Image
+                  </button>
+                  <button
+                    onClick={() => {
+                      setImageUrlInput(selectedImageUrl || '');
+                    }}
+                    className="px-6 bg-[rgba(255,255,255,0.1)] text-white py-2.5 rounded-lg font-medium text-sm hover:bg-[rgba(255,255,255,0.15)] transition-all"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : selectedElementType === 'icon' ? (
+              <div className="space-y-6">
+                <h3 className="text-white font-semibold text-lg mb-4">Edit Icon</h3>
+                
+                {/* Icon Preview */}
+                <div className="w-full aspect-square max-h-64 bg-[rgba(255,255,255,0.05)] rounded-lg flex items-center justify-center border border-[rgba(255,255,255,0.1)]">
+                  <div 
+                    className="text-white scale-[3]"
+                    dangerouslySetInnerHTML={{ __html: selectedIcon || selectedIconHtml || '' }}
+                  />
+                </div>
+
+                {/* Tabs */}
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setActiveIconTab('swap')}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      activeIconTab === 'swap'
+                        ? 'bg-[rgba(255,255,255,0.15)] text-white'
+                        : 'bg-[rgba(255,255,255,0.05)] text-white/50 hover:bg-[rgba(255,255,255,0.1)] hover:text-white/70'
+                    }`}
+                  >
+                    Swap
+                  </button>
+                  <button
+                    onClick={() => setActiveIconTab('upload')}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      activeIconTab === 'upload'
+                        ? 'bg-[rgba(255,255,255,0.15)] text-white'
+                        : 'bg-[rgba(255,255,255,0.05)] text-white/50 hover:bg-[rgba(255,255,255,0.1)] hover:text-white/70'
+                    }`}
+                  >
+                    Upload
+                  </button>
+                  <button
+                    onClick={() => setActiveIconTab('generate')}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      activeIconTab === 'generate'
+                        ? 'bg-[rgba(255,255,255,0.15)] text-white'
+                        : 'bg-[rgba(255,255,255,0.05)] text-white/50 hover:bg-[rgba(255,255,255,0.1)] hover:text-white/70'
+                    }`}
+                  >
+                    Generate
+                  </button>
+                </div>
+
+                {/* Swap Tab Content - Icon Grid */}
+                {activeIconTab === 'swap' && (
+                  <div className="grid grid-cols-4 gap-4">
+                    <button
+                      onClick={() => {
+                        const iconHtml = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+                        setSelectedIcon(iconHtml);
+                      }}
+                      className="aspect-square bg-[rgba(255,255,255,0.05)] rounded-lg flex items-center justify-center hover:bg-[rgba(255,255,255,0.1)] transition-colors border border-[rgba(255,255,255,0.1)] p-4"
+                    >
+                      <Check className="w-full h-full text-white" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        const iconHtml = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>`;
+                        setSelectedIcon(iconHtml);
+                      }}
+                      className="aspect-square bg-[rgba(255,255,255,0.05)] rounded-lg flex items-center justify-center hover:bg-[rgba(255,255,255,0.1)] transition-colors border border-[rgba(255,255,255,0.1)] p-4"
+                    >
+                      <X className="w-full h-full text-white" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        const iconHtml = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg>`;
+                        setSelectedIcon(iconHtml);
+                      }}
+                      className="aspect-square bg-[rgba(255,255,255,0.05)] rounded-lg flex items-center justify-center hover:bg-[rgba(255,255,255,0.1)] transition-colors border border-[rgba(255,255,255,0.1)] p-4"
+                    >
+                      <Heart className="w-full h-full text-white" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        const iconHtml = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`;
+                        setSelectedIcon(iconHtml);
+                      }}
+                      className="aspect-square bg-[rgba(255,255,255,0.05)] rounded-lg flex items-center justify-center hover:bg-[rgba(255,255,255,0.1)] transition-colors border border-[rgba(255,255,255,0.1)] p-4"
+                    >
+                      <Star className="w-full h-full text-white" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        const iconHtml = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full"><rect width="20" height="16" x="2" y="4" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg>`;
+                        setSelectedIcon(iconHtml);
+                      }}
+                      className="aspect-square bg-[rgba(255,255,255,0.05)] rounded-lg flex items-center justify-center hover:bg-[rgba(255,255,255,0.1)] transition-colors border border-[rgba(255,255,255,0.1)] p-4"
+                    >
+                      <Mail className="w-full h-full text-white" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        const iconHtml = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>`;
+                        setSelectedIcon(iconHtml);
+                      }}
+                      className="aspect-square bg-[rgba(255,255,255,0.05)] rounded-lg flex items-center justify-center hover:bg-[rgba(255,255,255,0.1)] transition-colors border border-[rgba(255,255,255,0.1)] p-4"
+                    >
+                      <Phone className="w-full h-full text-white" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        const iconHtml = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>`;
+                        setSelectedIcon(iconHtml);
+                      }}
+                      className="aspect-square bg-[rgba(255,255,255,0.05)] rounded-lg flex items-center justify-center hover:bg-[rgba(255,255,255,0.1)] transition-colors border border-[rgba(255,255,255,0.1)] p-4"
+                    >
+                      <MapPin className="w-full h-full text-white" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        const iconHtml = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
+                        setSelectedIcon(iconHtml);
+                      }}
+                      className="aspect-square bg-[rgba(255,255,255,0.05)] rounded-lg flex items-center justify-center hover:bg-[rgba(255,255,255,0.1)] transition-colors border border-[rgba(255,255,255,0.1)] p-4"
+                    >
+                      <User className="w-full h-full text-white" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        const iconHtml = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+                        setSelectedIcon(iconHtml);
+                      }}
+                      className="aspect-square bg-[rgba(255,255,255,0.05)] rounded-lg flex items-center justify-center hover:bg-[rgba(255,255,255,0.1)] transition-colors border border-[rgba(255,255,255,0.1)] p-4"
+                    >
+                      <Settings className="w-full h-full text-white" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        const iconHtml = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>`;
+                        setSelectedIcon(iconHtml);
+                      }}
+                      className="aspect-square bg-[rgba(255,255,255,0.05)] rounded-lg flex items-center justify-center hover:bg-[rgba(255,255,255,0.1)] transition-colors border border-[rgba(255,255,255,0.1)] p-4"
+                    >
+                      <Search className="w-full h-full text-white" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        const iconHtml = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>`;
+                        setSelectedIcon(iconHtml);
+                      }}
+                      className="aspect-square bg-[rgba(255,255,255,0.05)] rounded-lg flex items-center justify-center hover:bg-[rgba(255,255,255,0.1)] transition-colors border border-[rgba(255,255,255,0.1)] p-4"
+                    >
+                      <Home className="w-full h-full text-white" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        const iconHtml = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect><line x1="16" x2="16" y1="2" y2="6"></line><line x1="8" x2="8" y1="2" y2="6"></line><line x1="3" x2="21" y1="10" y2="10"></line></svg>`;
+                        setSelectedIcon(iconHtml);
+                      }}
+                      className="aspect-square bg-[rgba(255,255,255,0.05)] rounded-lg flex items-center justify-center hover:bg-[rgba(255,255,255,0.1)] transition-colors border border-[rgba(255,255,255,0.1)] p-4"
+                    >
+                      <Calendar className="w-full h-full text-white" />
+                    </button>
+                  </div>
+                )}
+
+                {/* Upload Tab Content */}
+                {activeIconTab === 'upload' && (
+                  <div className="text-center py-8">
+                    <p className="text-white/50 text-sm">Upload functionality coming soon</p>
+                  </div>
+                )}
+
+                {/* Generate Tab Content */}
+                {activeIconTab === 'generate' && (
+                  <div className="text-center py-8">
+                    <p className="text-white/50 text-sm">AI generation coming soon</p>
+                  </div>
+                )}
+
+                {/* Action Buttons */}
+                <div className="flex gap-3 pt-4">
+                  <button
+                    onClick={() => {
+                      if (selectedIcon && onIconUpdate) {
+                        onIconUpdate(selectedIcon);
+                      }
+                    }}
+                    className="flex-1 bg-brand-purple text-white py-2.5 rounded-lg font-semibold text-sm hover:bg-opacity-90 transition-all"
+                  >
+                    Save Icon
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSelectedIcon(selectedIconHtml || '');
+                    }}
+                    className="px-6 bg-[rgba(255,255,255,0.1)] text-white py-2.5 rounded-lg font-medium text-sm hover:bg-[rgba(255,255,255,0.15)] transition-all"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
             ) : (
               <div className="space-y-6">
-                <h3 className="text-white font-semibold text-lg mb-4">Text Properties</h3>
+                <h3 className="text-white font-semibold text-lg mb-4">Edit Text</h3>
                 
                 {/* Text Align */}
                 <div>
                   <label className="text-white text-sm mb-2 block">Text Align</label>
                   <div className="grid grid-cols-4 gap-2">
-                    {['left', 'center', 'right', 'justify'].map((align) => (
-                      <button
-                        key={align}
-                        onClick={() => onStyleUpdate?.('textAlign', align)}
-                        className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
-                          selectedStyles?.textAlign === align
-                            ? 'bg-brand-purple text-white'
-                            : 'bg-[rgba(255,255,255,0.1)] text-white hover:bg-[rgba(255,255,255,0.15)]'
-                        }`}
-                      >
-                        {align.charAt(0).toUpperCase() + align.slice(1)}
-                      </button>
-                    ))}
+                    {/* Left Align */}
+                    <button
+                      onClick={() => onStyleUpdate?.('textAlign', 'left')}
+                      className={`px-3 py-2 rounded-lg transition-colors flex items-center justify-center ${
+                        selectedStyles?.textAlign === 'left'
+                          ? 'bg-brand-purple text-white'
+                          : 'bg-[rgba(255,255,255,0.1)] text-white hover:bg-[rgba(255,255,255,0.15)]'
+                      }`}
+                    >
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="3" y="4" width="14" height="2" rx="1" fill="currentColor"/>
+                        <rect x="3" y="9" width="10" height="2" rx="1" fill="currentColor"/>
+                        <rect x="3" y="14" width="12" height="2" rx="1" fill="currentColor"/>
+                      </svg>
+                    </button>
+                    
+                    {/* Center Align */}
+                    <button
+                      onClick={() => onStyleUpdate?.('textAlign', 'center')}
+                      className={`px-3 py-2 rounded-lg transition-colors flex items-center justify-center ${
+                        selectedStyles?.textAlign === 'center'
+                          ? 'bg-brand-purple text-white'
+                          : 'bg-[rgba(255,255,255,0.1)] text-white hover:bg-[rgba(255,255,255,0.15)]'
+                      }`}
+                    >
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="3" y="4" width="14" height="2" rx="1" fill="currentColor"/>
+                        <rect x="5" y="9" width="10" height="2" rx="1" fill="currentColor"/>
+                        <rect x="4" y="14" width="12" height="2" rx="1" fill="currentColor"/>
+                      </svg>
+                    </button>
+                    
+                    {/* Right Align */}
+                    <button
+                      onClick={() => onStyleUpdate?.('textAlign', 'right')}
+                      className={`px-3 py-2 rounded-lg transition-colors flex items-center justify-center ${
+                        selectedStyles?.textAlign === 'right'
+                          ? 'bg-brand-purple text-white'
+                          : 'bg-[rgba(255,255,255,0.1)] text-white hover:bg-[rgba(255,255,255,0.15)]'
+                      }`}
+                    >
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="3" y="4" width="14" height="2" rx="1" fill="currentColor"/>
+                        <rect x="7" y="9" width="10" height="2" rx="1" fill="currentColor"/>
+                        <rect x="5" y="14" width="12" height="2" rx="1" fill="currentColor"/>
+                      </svg>
+                    </button>
+                    
+                    {/* Justify */}
+                    <button
+                      onClick={() => onStyleUpdate?.('textAlign', 'justify')}
+                      className={`px-3 py-2 rounded-lg transition-colors flex items-center justify-center ${
+                        selectedStyles?.textAlign === 'justify'
+                          ? 'bg-brand-purple text-white'
+                          : 'bg-[rgba(255,255,255,0.1)] text-white hover:bg-[rgba(255,255,255,0.15)]'
+                      }`}
+                    >
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="3" y="4" width="14" height="2" rx="1" fill="currentColor"/>
+                        <rect x="3" y="9" width="14" height="2" rx="1" fill="currentColor"/>
+                        <rect x="3" y="14" width="14" height="2" rx="1" fill="currentColor"/>
+                      </svg>
+                    </button>
                   </div>
                 </div>
 
                 {/* Text Color */}
                 <div>
                   <label className="text-white text-sm mb-2 block">Text Color</label>
-                  <input
-                    type="color"
-                    value={selectedStyles?.color || '#000000'}
-                    onChange={(e) => onStyleUpdate?.('color', e.target.value)}
-                    className="w-full h-10 rounded-lg cursor-pointer"
-                  />
+                  <div className="relative">
+                    <input
+                      type="color"
+                      value={rgbToHex(selectedStyles?.color || '#000000')}
+                      onChange={(e) => onStyleUpdate?.('color', e.target.value)}
+                      className="absolute opacity-0 w-0 h-0"
+                      id="color-picker"
+                    />
+                    <label
+                      htmlFor="color-picker"
+                      className="w-full px-3 py-2 rounded-lg bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] flex items-center gap-3 cursor-pointer hover:bg-[rgba(255,255,255,0.15)] transition-colors"
+                    >
+                      <div
+                        className="w-6 h-6 rounded border-2 border-white/20 flex-shrink-0"
+                        style={{ backgroundColor: selectedStyles?.color || '#000000' }}
+                      />
+                      <span className="text-white text-sm font-mono uppercase">
+                        {rgbToHex(selectedStyles?.color || '#000000')}
+                      </span>
+                    </label>
+                  </div>
                 </div>
 
                 {/* Font Weight */}
                 <div>
                   <label className="text-white text-sm mb-2 block">Font Weight</label>
-                  <select
-                    value={selectedStyles?.fontWeight || 'normal'}
-                    onChange={(e) => onStyleUpdate?.('fontWeight', e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-[rgba(255,255,255,0.1)] text-white border border-[rgba(255,255,255,0.2)] focus:border-brand-purple focus:outline-none"
-                  >
-                    <option value="normal" className="bg-brand-navy">Normal (400)</option>
-                    <option value="500" className="bg-brand-navy">Medium (500)</option>
-                    <option value="600" className="bg-brand-navy">Semibold (600)</option>
-                    <option value="bold" className="bg-brand-navy">Bold (700)</option>
-                  </select>
+                  <div className="relative">
+                    <select
+                      value={selectedStyles?.fontWeight || 'normal'}
+                      onChange={(e) => onStyleUpdate?.('fontWeight', e.target.value)}
+                      className="w-full pl-3 pr-10 py-2 rounded-lg bg-[rgba(255,255,255,0.1)] text-white border border-[rgba(255,255,255,0.2)] focus:border-brand-purple focus:outline-none appearance-none cursor-pointer"
+                    >
+                      <option value="normal" className="bg-brand-navy">Normal (400)</option>
+                      <option value="500" className="bg-brand-navy">Medium (500)</option>
+                      <option value="600" className="bg-brand-navy">Semibold (600)</option>
+                      <option value="bold" className="bg-brand-navy">Bold (700)</option>
+                    </select>
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                        <path d="M2.5 4.5L6 8L9.5 4.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Font Size */}
@@ -337,8 +799,15 @@ export default function EditPanel({ selectedElement, selectedStyles, onStyleUpda
                   </div>
                 </div>
 
-                {/* Note */}
-                <p className="text-white text-sm">Edit fonts in the Brand Tab</p>
+                {/* Font */}
+                <div>
+                  <label className="text-white text-sm mb-2 block">
+                    Font <span className="text-white/50">(edit in Brand tab)</span>
+                  </label>
+                  <div className="w-full px-3 py-2 rounded-lg bg-[rgba(255,255,255,0.05)] text-white/50 border border-[rgba(255,255,255,0.1)]">
+                    {selectedStyles?.fontFamily || 'Onest'}
+                  </div>
+                </div>
               </div>
             )}
           </div>
@@ -354,11 +823,417 @@ export default function EditPanel({ selectedElement, selectedStyles, onStyleUpda
         )}
 
         {activeMode === 'brand' && (
-          <div className="flex flex-col items-center justify-center flex-1 w-full gap-4">
-            <h2 className="text-2xl font-semibold text-white">Brand Mode</h2>
-            <p className="text-white opacity-70 text-center">
-              Brand customization options will appear here.
-            </p>
+          <div className="flex flex-col flex-1 w-full overflow-y-auto p-4 edit-panel-scroll">
+            <div className="space-y-6">
+              <h3 className="text-white font-semibold text-lg">Edit Brand</h3>
+              
+              {/* Description */}
+              
+
+              {/* Theme Dropdown */}
+              <div>
+                <label className="text-white text-sm mb-2 block">Color Palette</label>
+                <div className="relative" ref={themeDropdownRef}>
+                  {/* Dropdown Trigger */}
+                  <button
+                    onClick={() => setIsThemeDropdownOpen(!isThemeDropdownOpen)}
+                    className="w-full pl-3 pr-10 py-2.5 rounded-lg bg-[rgba(255,255,255,0.1)] text-white border border-[rgba(255,255,255,0.2)] hover:bg-[rgba(255,255,255,0.15)] focus:border-brand-purple focus:outline-none cursor-pointer transition-colors text-left flex items-center"
+                  >
+                    {selectedTheme ? (
+                      <div className="flex items-center gap-3">
+                        <div className="flex gap-1.5">
+                          {themePalettes.find(t => t.id === selectedTheme)?.colors.map((color, idx) => (
+                            <div
+                              key={idx}
+                              className="w-6 h-6 rounded"
+                              style={{ backgroundColor: color }}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-sm">
+                          {themePalettes.find(t => t.id === selectedTheme)?.name}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-white/70 text-sm">Choose palette</span>
+                    )}
+                  </button>
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                    <svg 
+                      width="12" 
+                      height="12" 
+                      viewBox="0 0 12 12" 
+                      fill="none"
+                      className={`transition-transform ${isThemeDropdownOpen ? 'rotate-180' : ''}`}
+                    >
+                      <path d="M2.5 4.5L6 8L9.5 4.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+
+                  {/* Dropdown Menu */}
+                  {isThemeDropdownOpen && (
+                    <div className="absolute z-50 w-full mt-2 bg-white rounded-lg shadow-lg border border-gray-200 max-h-80 overflow-y-auto">
+                      {themePalettes.map((theme) => (
+                        <button
+                          key={theme.id}
+                          onClick={() => {
+                            setSelectedTheme(theme.id);
+                            setIsThemeDropdownOpen(false);
+                          }}
+                          className={`w-full px-4 py-2.5 flex items-center gap-3 hover:bg-gray-50 transition-colors text-left border-b border-gray-100 last:border-b-0 ${
+                            selectedTheme === theme.id ? 'bg-gray-50' : ''
+                          }`}
+                        >
+                          <div className="flex gap-1">
+                            {theme.colors.map((color, idx) => (
+                              <div
+                                key={idx}
+                                className="w-6 h-6 rounded"
+                                style={{ backgroundColor: color }}
+                              />
+                            ))}
+                          </div>
+                          <span className="text-gray-900 text-sm font-medium">
+                            {theme.name}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Background Colors Section */}
+              <div className="pt-6 border-t border-[rgba(255,255,255,0.1)]">
+                <h4 className="text-white font-semibold text-base mb-4">Page Background</h4>
+                
+                <div className="flex gap-3">
+                  {/* Page Background */}
+                  <div className="flex-1">
+                    <label className="text-white text-sm mb-2 block">Primary</label>
+                    <div className="relative">
+                      <input
+                        type="color"
+                        value={pageBgColor}
+                        onChange={(e) => setPageBgColor(e.target.value)}
+                        className="absolute opacity-0 w-0 h-0"
+                        id="page-bg-color-picker"
+                      />
+                      <label
+                        htmlFor="page-bg-color-picker"
+                        className="w-full px-2 py-2 rounded-lg bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] flex items-center gap-2 cursor-pointer hover:bg-[rgba(255,255,255,0.15)] transition-colors"
+                      >
+                        <div
+                          className="w-6 h-6 rounded border-2 border-white/20 flex-shrink-0"
+                          style={{ backgroundColor: pageBgColor }}
+                        />
+                        <span className="text-white text-sm font-mono uppercase leading-tight">
+                          {pageBgColor}
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Page Secondary Background */}
+                  <div className="flex-1">
+                    <label className="text-white text-sm mb-2 block">Secondary</label>
+                    <div className="relative">
+                      <input
+                        type="color"
+                        value={pageSecondaryBgColor}
+                        onChange={(e) => setPageSecondaryBgColor(e.target.value)}
+                        className="absolute opacity-0 w-0 h-0"
+                        id="page-secondary-bg-color-picker"
+                      />
+                      <label
+                        htmlFor="page-secondary-bg-color-picker"
+                        className="w-full px-2 py-2 rounded-lg bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] flex items-center gap-2 cursor-pointer hover:bg-[rgba(255,255,255,0.15)] transition-colors"
+                      >
+                        <div
+                          className="w-6 h-6 rounded border-2 border-white/20 flex-shrink-0"
+                          style={{ backgroundColor: pageSecondaryBgColor }}
+                        />
+                        <span className="text-white text-sm font-mono uppercase leading-tight">
+                          {pageSecondaryBgColor}
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Buttons Section */}
+              <div className="pt-6 border-t border-[rgba(255,255,255,0.1)]">
+                <h4 className="text-white font-semibold text-base mb-4">Buttons</h4>
+                
+                <div className="flex gap-3 mb-4">
+                  {/* Primary Button Color */}
+                  <div className="flex-1">
+                    <label className="text-white text-sm mb-2 block">Primary</label>
+                    <div className="relative">
+                      <input
+                        type="color"
+                        value={buttonPrimaryColor}
+                        onChange={(e) => setButtonPrimaryColor(e.target.value)}
+                        className="absolute opacity-0 w-0 h-0"
+                        id="button-primary-color-picker"
+                      />
+                      <label
+                        htmlFor="button-primary-color-picker"
+                        className="w-full px-2 py-2 rounded-lg bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] flex items-center gap-2 cursor-pointer hover:bg-[rgba(255,255,255,0.15)] transition-colors"
+                      >
+                        <div
+                          className="w-6 h-6 rounded border-2 border-white/20 flex-shrink-0"
+                          style={{ backgroundColor: buttonPrimaryColor }}
+                        />
+                        <span className="text-white text-sm font-mono uppercase leading-tight">
+                          {buttonPrimaryColor}
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Secondary Button Color */}
+                  <div className="flex-1">
+                    <label className="text-white text-sm mb-2 block">Secondary</label>
+                    <div className="relative">
+                      <input
+                        type="color"
+                        value={buttonSecondaryColor}
+                        onChange={(e) => setButtonSecondaryColor(e.target.value)}
+                        className="absolute opacity-0 w-0 h-0"
+                        id="button-secondary-color-picker"
+                      />
+                      <label
+                        htmlFor="button-secondary-color-picker"
+                        className="w-full px-2 py-2 rounded-lg bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] flex items-center gap-2 cursor-pointer hover:bg-[rgba(255,255,255,0.15)] transition-colors"
+                      >
+                        <div
+                          className="w-6 h-6 rounded border-2 border-white/20 flex-shrink-0"
+                          style={{ backgroundColor: buttonSecondaryColor }}
+                        />
+                        <span className="text-white text-sm font-mono uppercase leading-tight">
+                          {buttonSecondaryColor}
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Corner Radius */}
+                <div>
+                  <label className="text-white text-sm mb-2 block">Corner Radius</label>
+                  <div className="flex gap-2 items-center">
+                    <input
+                      type="number"
+                      value={buttonCornerRadius}
+                      onChange={(e) => setButtonCornerRadius(e.target.value)}
+                      className="flex-1 px-3 py-2 rounded-lg bg-[rgba(255,255,255,0.1)] text-white border border-[rgba(255,255,255,0.2)] focus:border-brand-purple focus:outline-none"
+                      min="0"
+                      max="50"
+                    />
+                    <span className="text-white text-sm">px</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Fonts Section */}
+              <div className="pt-6 border-t border-[rgba(255,255,255,0.1)]">
+                <h4 className="text-white font-semibold text-base mb-4">Fonts</h4>
+                
+                {/* Headings Font */}
+                <div className="mb-4">
+                  <label className="text-white text-sm mb-2 block">Headings</label>
+                  <div className="relative">
+                    <select
+                      className="w-full pl-3 pr-10 py-2.5 rounded-lg bg-[rgba(255,255,255,0.1)] text-white border border-[rgba(255,255,255,0.2)] focus:border-brand-purple focus:outline-none appearance-none cursor-pointer"
+                    >
+                      <option value="inter" className="bg-brand-navy">Inter</option>
+                      <option value="poppins" className="bg-brand-navy">Poppins</option>
+                      <option value="roboto" className="bg-brand-navy">Roboto</option>
+                      <option value="montserrat" className="bg-brand-navy">Montserrat</option>
+                      <option value="open-sans" className="bg-brand-navy">Open Sans</option>
+                    </select>
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                        <path d="M2.5 4.5L6 8L9.5 4.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Body Font */}
+                <div>
+                  <label className="text-white text-sm mb-2 block">Body</label>
+                  <div className="relative">
+                    <select
+                      className="w-full pl-3 pr-10 py-2.5 rounded-lg bg-[rgba(255,255,255,0.1)] text-white border border-[rgba(255,255,255,0.2)] focus:border-brand-purple focus:outline-none appearance-none cursor-pointer"
+                    >
+                      <option value="inter" className="bg-brand-navy">Inter</option>
+                      <option value="poppins" className="bg-brand-navy">Poppins</option>
+                      <option value="roboto" className="bg-brand-navy">Roboto</option>
+                      <option value="montserrat" className="bg-brand-navy">Montserrat</option>
+                      <option value="open-sans" className="bg-brand-navy">Open Sans</option>
+                    </select>
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                        <path d="M2.5 4.5L6 8L9.5 4.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Forms Section */}
+              <div className="pt-6 border-t border-[rgba(255,255,255,0.1)]">
+                <h4 className="text-white font-semibold text-base mb-4">Forms</h4>
+                
+                <div className="flex gap-3 mb-4">
+                  {/* Border Color */}
+                  <div className="flex-1">
+                    <label className="text-white text-sm mb-2 block">Border</label>
+                    <div className="relative">
+                      <input
+                        type="color"
+                        value={formBorderColor}
+                        onChange={(e) => setFormBorderColor(e.target.value)}
+                        className="absolute opacity-0 w-0 h-0"
+                        id="form-border-color-picker"
+                      />
+                      <label
+                        htmlFor="form-border-color-picker"
+                        className="w-full px-2 py-2 rounded-lg bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] flex items-center gap-2 cursor-pointer hover:bg-[rgba(255,255,255,0.15)] transition-colors"
+                      >
+                        <div
+                          className="w-6 h-6 rounded border-2 border-white/20 flex-shrink-0"
+                          style={{ backgroundColor: formBorderColor }}
+                        />
+                        <span className="text-white text-sm font-mono uppercase leading-tight">
+                          {formBorderColor}
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Background Color */}
+                  <div className="flex-1">
+                    <label className="text-white text-sm mb-2 block">Background</label>
+                    <div className="relative">
+                      <input
+                        type="color"
+                        value={formBackgroundColor}
+                        onChange={(e) => setFormBackgroundColor(e.target.value)}
+                        className="absolute opacity-0 w-0 h-0"
+                        id="form-background-color-picker"
+                      />
+                      <label
+                        htmlFor="form-background-color-picker"
+                        className="w-full px-2 py-2 rounded-lg bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] flex items-center gap-2 cursor-pointer hover:bg-[rgba(255,255,255,0.15)] transition-colors"
+                      >
+                        <div
+                          className="w-6 h-6 rounded border-2 border-white/20 flex-shrink-0"
+                          style={{ backgroundColor: formBackgroundColor }}
+                        />
+                        <span className="text-white text-sm font-mono uppercase leading-tight">
+                          {formBackgroundColor}
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Border Radius */}
+                <div>
+                  <label className="text-white text-sm mb-2 block">Border Radius</label>
+                  <div className="flex gap-2 items-center">
+                    <input
+                      type="number"
+                      value={formBorderRadius}
+                      onChange={(e) => setFormBorderRadius(e.target.value)}
+                      className="flex-1 px-3 py-2 rounded-lg bg-[rgba(255,255,255,0.1)] text-white border border-[rgba(255,255,255,0.2)] focus:border-brand-purple focus:outline-none"
+                      min="0"
+                      max="50"
+                    />
+                    <span className="text-white text-sm">px</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card Section */}
+              <div className="pt-6 border-t border-[rgba(255,255,255,0.1)]">
+                <h4 className="text-white font-semibold text-base mb-4">Card</h4>
+                
+                <div className="flex gap-3 mb-4">
+                  {/* Border Color */}
+                  <div className="flex-1">
+                    <label className="text-white text-sm mb-2 block">Border</label>
+                    <div className="relative">
+                      <input
+                        type="color"
+                        value={cardBorderColor}
+                        onChange={(e) => setCardBorderColor(e.target.value)}
+                        className="absolute opacity-0 w-0 h-0"
+                        id="card-border-color-picker"
+                      />
+                      <label
+                        htmlFor="card-border-color-picker"
+                        className="w-full px-2 py-2 rounded-lg bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] flex items-center gap-2 cursor-pointer hover:bg-[rgba(255,255,255,0.15)] transition-colors"
+                      >
+                        <div
+                          className="w-6 h-6 rounded border-2 border-white/20 flex-shrink-0"
+                          style={{ backgroundColor: cardBorderColor }}
+                        />
+                        <span className="text-white text-sm font-mono uppercase leading-tight">
+                          {cardBorderColor}
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Background Color */}
+                  <div className="flex-1">
+                    <label className="text-white text-sm mb-2 block">Background</label>
+                    <div className="relative">
+                      <input
+                        type="color"
+                        value={cardBackgroundColor}
+                        onChange={(e) => setCardBackgroundColor(e.target.value)}
+                        className="absolute opacity-0 w-0 h-0"
+                        id="card-background-color-picker"
+                      />
+                      <label
+                        htmlFor="card-background-color-picker"
+                        className="w-full px-2 py-2 rounded-lg bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] flex items-center gap-2 cursor-pointer hover:bg-[rgba(255,255,255,0.15)] transition-colors"
+                      >
+                        <div
+                          className="w-6 h-6 rounded border-2 border-white/20 flex-shrink-0"
+                          style={{ backgroundColor: cardBackgroundColor }}
+                        />
+                        <span className="text-white text-sm font-mono uppercase leading-tight">
+                          {cardBackgroundColor}
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Border Radius */}
+                <div>
+                  <label className="text-white text-sm mb-2 block">Border Radius</label>
+                  <div className="flex gap-2 items-center">
+                    <input
+                      type="number"
+                      value={cardBorderRadius}
+                      onChange={(e) => setCardBorderRadius(e.target.value)}
+                      className="flex-1 px-3 py-2 rounded-lg bg-[rgba(255,255,255,0.1)] text-white border border-[rgba(255,255,255,0.2)] focus:border-brand-purple focus:outline-none"
+                      min="0"
+                      max="50"
+                    />
+                    <span className="text-white text-sm">px</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
@@ -380,11 +1255,11 @@ export default function EditPanel({ selectedElement, selectedStyles, onStyleUpda
           </div>
         )}
 
-        {/* Chat Input Box - Hidden in Design Mode */}
-        {activeMode !== 'design' && (
-          <div className={`focus-within:bg-[rgba(255,255,255,0.13)] border-[0.5px] border-solid box-border flex flex-col gap-1 items-start p-2.5 rounded-lg shrink-0 w-full focus-within:border-brand-gray transition-all ${
-            !hasInteracted ? 'animate-border-sweep' : 'bg-[rgba(255,255,255,0.1)] border-[rgba(241,243,255,0.3)]'
-          }`} data-name="Chat Box">
+        {/* Chat Input Box - Hidden in Design and Brand Mode */}
+        {activeMode !== 'design' && activeMode !== 'brand' && (
+        <div className={`focus-within:bg-[rgba(255,255,255,0.13)] border-[0.5px] border-solid box-border flex flex-col gap-1 items-start p-2.5 rounded-lg shrink-0 w-full focus-within:border-brand-gray transition-all ${
+          !hasInteracted ? 'animate-border-sweep' : 'bg-[rgba(255,255,255,0.1)] border-[rgba(241,243,255,0.3)]'
+        }`} data-name="Chat Box">
               <textarea
                 ref={textareaRef}
                 value={inputValue}
@@ -415,19 +1290,19 @@ export default function EditPanel({ selectedElement, selectedStyles, onStyleUpda
                   </div>
                 </button>
                 
-                <button
-                  onClick={() => {
-                    setHasInteracted(true);
-                    handleSendMessage();
-                  }}
-                  className="bg-[rgba(241,243,255,0.3)] box-border flex items-center justify-center p-1.5 rounded-full shrink-0 hover:bg-[rgba(241,243,255,0.4)] transition-colors cursor-pointer"
-                >
-                  <ArrowUp className="w-4 h-4 text-white" />
-                </button>
+                  <button
+                    onClick={() => {
+                      setHasInteracted(true);
+                      handleSendMessage();
+                    }}
+                    className="bg-[rgba(241,243,255,0.3)] box-border flex items-center justify-center p-1.5 rounded-full shrink-0 hover:bg-[rgba(241,243,255,0.4)] transition-colors cursor-pointer"
+                  >
+                    <ArrowUp className="w-4 h-4 text-white" />
+                  </button>
+                </div>
               </div>
-            </div>
         )}
-        </div>
+            </div>
       )}
     </div>
   );
