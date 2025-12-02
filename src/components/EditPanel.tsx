@@ -63,10 +63,12 @@ type EditPanelProps = {
   onImageUpdate?: (newUrl: string) => void;
   onIconUpdate?: (newIconHtml: string) => void;
   onModeChange?: (mode: ModeType) => void;
+  onThemeChange?: (colors: ThemeColors) => void;
 };
 
-// Theme palette definitions
-const themePalettes = [
+// Theme palette definitions - exported for use in other components
+export const themePalettes = [
+  { id: 'original', name: 'Original', colors: ['#836FFF', '#F5D0FE', '#22C55E', '#F9FAFB'] },
   { id: 'ocean-blue', name: 'Ocean Blue', colors: ['#0047AB', '#4A90E2', '#1E3A8A', '#334155'] },
   { id: 'forest-green', name: 'Forest Green', colors: ['#065F46', '#10B981', '#064E3B', '#334155'] },
   { id: 'sunset-orange', name: 'Sunset Orange', colors: ['#C2410C', '#F97316', '#9A3412', '#334155'] },
@@ -79,7 +81,15 @@ const themePalettes = [
   { id: 'design-pink', name: 'Design Pink', colors: ['#DB2777', '#EC4899', '#F472B6', '#BE185D'] },
 ];
 
-export default function EditPanel({ selectedElement, selectedElementType, selectedStyles, selectedImageUrl, selectedIconHtml, onStyleUpdate, onImageUpdate, onIconUpdate, onModeChange }: EditPanelProps = {}) {
+// Theme colors type for passing to preview pages
+export type ThemeColors = {
+  primary: string;      // Main buttons, accents
+  secondary: string;    // Lighter accents, backgrounds
+  accent: string;       // Highlights, checkmarks
+  text: string;         // Dark text color
+};
+
+export default function EditPanel({ selectedElement, selectedElementType, selectedStyles, selectedImageUrl, selectedIconHtml, onStyleUpdate, onImageUpdate, onIconUpdate, onModeChange, onThemeChange }: EditPanelProps = {}) {
   const [activeMode, setActiveMode] = useState<ModeType>('chat');
   const [messages, setMessages] = useState<Message[]>([]);
   const [isThinking, setIsThinking] = useState(false);
@@ -92,7 +102,7 @@ export default function EditPanel({ selectedElement, selectedElementType, select
   const [activeIconTab, setActiveIconTab] = useState<'swap' | 'upload' | 'generate'>('swap');
   const [selectedIcon, setSelectedIcon] = useState<string>('');
   const [isThemeDropdownOpen, setIsThemeDropdownOpen] = useState(false);
-  const [selectedTheme, setSelectedTheme] = useState<string>('');
+  const [selectedTheme, setSelectedTheme] = useState<string>('original');
   const [pageBgColor, setPageBgColor] = useState('#FFFFFF');
   const [pageSecondaryBgColor, setPageSecondaryBgColor] = useState('#F0F0F0');
   const [buttonPrimaryColor, setButtonPrimaryColor] = useState('#836FFF');
@@ -155,6 +165,21 @@ export default function EditPanel({ selectedElement, selectedElementType, select
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  // Notify parent when theme changes
+  useEffect(() => {
+    if (onThemeChange && selectedTheme) {
+      const theme = themePalettes.find(t => t.id === selectedTheme);
+      if (theme) {
+        onThemeChange({
+          primary: theme.colors[0],
+          secondary: theme.colors[1],
+          accent: theme.colors[2],
+          text: theme.colors[3]
+        });
+      }
+    }
+  }, [selectedTheme, onThemeChange]);
 
   const handleSendMessage = () => {
     if (!inputValue.trim()) return;
@@ -845,7 +870,7 @@ export default function EditPanel({ selectedElement, selectedElementType, select
                           {themePalettes.find(t => t.id === selectedTheme)?.colors.map((color, idx) => (
                             <div
                               key={idx}
-                              className="w-6 h-6 rounded"
+                              className="w-6 h-6 rounded border border-[rgba(0,0,0,0.1)]"
                               style={{ backgroundColor: color }}
                             />
                           ))}
@@ -879,6 +904,12 @@ export default function EditPanel({ selectedElement, selectedElementType, select
                           onClick={() => {
                             setSelectedTheme(theme.id);
                             setIsThemeDropdownOpen(false);
+                            // Update all color pickers to match the theme
+                            setButtonPrimaryColor(theme.colors[0]);
+                            setButtonSecondaryColor(theme.colors[1]);
+                            setPageSecondaryBgColor(theme.colors[1]);
+                            setFormBorderColor(theme.colors[3]);
+                            setCardBorderColor(theme.colors[3]);
                           }}
                           className={`w-full px-4 py-2.5 flex items-center gap-3 hover:bg-gray-50 transition-colors text-left border-b border-gray-100 last:border-b-0 ${
                             selectedTheme === theme.id ? 'bg-gray-50' : ''
@@ -888,7 +919,7 @@ export default function EditPanel({ selectedElement, selectedElementType, select
                             {theme.colors.map((color, idx) => (
                               <div
                                 key={idx}
-                                className="w-6 h-6 rounded"
+                                className="w-6 h-6 rounded border border-gray-200"
                                 style={{ backgroundColor: color }}
                               />
                             ))}

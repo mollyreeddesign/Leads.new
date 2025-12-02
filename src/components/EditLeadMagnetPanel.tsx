@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import EditPanel from './EditPanel';
+import EditPanel, { ThemeColors } from './EditPanel';
 import SiteNavigation from './SiteNavigation';
 
 // Image assets - Local imports
@@ -29,6 +29,14 @@ export default function EditLeadMagnetPanel({ onPreviewClick, onTabChange }: Edi
     fontWeight: 'normal',
     fontSize: '16px',
     fontFamily: 'Onest'
+  });
+  
+  // Theme colors state - default to Original palette
+  const [themeColors, setThemeColors] = useState<ThemeColors>({
+    primary: '#836FFF',
+    secondary: '#F5D0FE',
+    accent: '#22C55E',
+    text: '#F9FAFB'
   });
 
   // Normalize font weight to match dropdown values
@@ -287,6 +295,7 @@ export default function EditLeadMagnetPanel({ onPreviewClick, onTabChange }: Edi
           onImageUpdate={handleImageUpdate}
           onIconUpdate={handleIconUpdate}
           onModeChange={(mode) => setCurrentMode(mode)}
+          onThemeChange={setThemeColors}
         />
         {/* Result Panel */}
         <div className="bg-white flex flex-1 flex-col h-full items-center justify-between min-h-0 min-w-px relative" data-name="Result Panel">
@@ -428,7 +437,10 @@ export default function EditLeadMagnetPanel({ onPreviewClick, onTabChange }: Edi
     return (
       <>
               {/* Hero Section Preview */}
-              <div className="relative bg-gradient-to-br from-purple-100 via-pink-50 to-white px-6 py-8">
+              <div 
+                className="relative px-6 py-8"
+                style={{ background: `linear-gradient(to bottom right, ${themeColors.secondary}40, ${themeColors.secondary}20, white)` }}
+              >
                 <div className="flex items-start gap-6">
                   <div className="flex-1">
                     <p 
@@ -453,7 +465,8 @@ export default function EditLeadMagnetPanel({ onPreviewClick, onTabChange }: Edi
                       <div className="flex items-center gap-1.5">
                         <div 
                           onClick={handleIconClick}
-                          className={`w-3 h-3 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 ${getIconClass()}`}
+                          className={`w-3 h-3 rounded-full flex items-center justify-center flex-shrink-0 ${getIconClass()}`}
+                          style={{ backgroundColor: themeColors.accent }}
                         >
                           <svg className="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
@@ -469,7 +482,8 @@ export default function EditLeadMagnetPanel({ onPreviewClick, onTabChange }: Edi
                       <div className="flex items-center gap-1.5">
                         <div 
                           onClick={handleIconClick}
-                          className={`w-3 h-3 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 ${getIconClass()}`}
+                          className={`w-3 h-3 rounded-full flex items-center justify-center flex-shrink-0 ${getIconClass()}`}
+                          style={{ backgroundColor: themeColors.accent }}
                         >
                           <svg className="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
@@ -485,7 +499,8 @@ export default function EditLeadMagnetPanel({ onPreviewClick, onTabChange }: Edi
                       <div className="flex items-center gap-1.5">
                         <div 
                           onClick={handleIconClick}
-                          className={`w-3 h-3 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 ${getIconClass()}`}
+                          className={`w-3 h-3 rounded-full flex items-center justify-center flex-shrink-0 ${getIconClass()}`}
+                          style={{ backgroundColor: themeColors.accent }}
                         >
                           <svg className="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
@@ -556,7 +571,8 @@ export default function EditLeadMagnetPanel({ onPreviewClick, onTabChange }: Edi
 
                   <div 
                     onClick={handleElementClick}
-                    className={`w-full bg-brand-purple text-white py-2 rounded-lg font-semibold text-xs text-center ${getButtonClass()}`}
+                    className={`w-full text-white py-2 rounded-lg font-semibold text-xs text-center ${getButtonClass()}`}
+                    style={{ backgroundColor: themeColors.primary }}
                   >
                     Get My Personalized Results
                   </div>
@@ -778,7 +794,10 @@ export default function EditLeadMagnetPanel({ onPreviewClick, onTabChange }: Edi
     return (
       <>
         {/* Quiz Header */}
-        <div className="bg-gradient-to-br from-purple-100 via-pink-50 to-white px-6 py-6 text-center">
+        <div 
+          className="px-6 py-6 text-center"
+          style={{ background: `linear-gradient(to bottom right, ${themeColors.secondary}40, ${themeColors.secondary}20, white)` }}
+        >
           <p 
             onClick={handleElementClick}
             className={`text-[8px] font-semibold text-gray-600 mb-2 uppercase tracking-wide ${getTextHoverClass()}`}
@@ -810,13 +829,14 @@ export default function EditLeadMagnetPanel({ onPreviewClick, onTabChange }: Edi
             </span>
             <span 
               onClick={handleElementClick}
-              className={`text-[10px] font-medium text-brand-purple ${getTextHoverClass()}`}
+              className={`text-[10px] font-medium ${getTextHoverClass()}`}
+              style={{ color: themeColors.primary }}
             >
               37% Complete
             </span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-1.5">
-            <div className="bg-brand-purple h-1.5 rounded-full transition-all" style={{ width: '37%' }}></div>
+            <div className="h-1.5 rounded-full transition-all" style={{ width: '37%', backgroundColor: themeColors.primary }}></div>
           </div>
         </div>
 
@@ -836,16 +856,20 @@ export default function EditLeadMagnetPanel({ onPreviewClick, onTabChange }: Edi
                 onClick={() => handleQuizAnswerClick(1)}
                 className={`w-full text-left p-3 border-2 rounded-lg transition-all ${
                   selectedQuizAnswer === 1 
-                    ? 'border-brand-purple bg-purple-50' 
-                    : 'border-gray-200 hover:border-brand-purple hover:bg-purple-50'
+                    ? '' 
+                    : 'border-gray-200'
                 } ${currentMode === 'design' ? 'cursor-default' : 'cursor-pointer'}`}
+                style={selectedQuizAnswer === 1 ? { borderColor: themeColors.primary, backgroundColor: `${themeColors.primary}10` } : {}}
               >
                 <div className="flex items-start gap-2">
-                  <div className={`w-4 h-4 rounded-full border-2 flex-shrink-0 mt-0.5 flex items-center justify-center ${
-                    selectedQuizAnswer === 1 ? 'border-brand-purple' : 'border-gray-300'
-                  }`}>
+                  <div 
+                    className={`w-4 h-4 rounded-full border-2 flex-shrink-0 mt-0.5 flex items-center justify-center ${
+                      selectedQuizAnswer === 1 ? '' : 'border-gray-300'
+                    }`}
+                    style={selectedQuizAnswer === 1 ? { borderColor: themeColors.primary } : {}}
+                  >
                     {selectedQuizAnswer === 1 && (
-                      <div className="w-2 h-2 rounded-full bg-brand-purple"></div>
+                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: themeColors.primary }}></div>
                     )}
                   </div>
                   <div>
@@ -870,16 +894,20 @@ export default function EditLeadMagnetPanel({ onPreviewClick, onTabChange }: Edi
                 onClick={() => handleQuizAnswerClick(2)}
                 className={`w-full text-left p-3 border-2 rounded-lg transition-all ${
                   selectedQuizAnswer === 2 
-                    ? 'border-brand-purple bg-purple-50' 
-                    : 'border-gray-200 hover:border-brand-purple hover:bg-purple-50'
+                    ? '' 
+                    : 'border-gray-200'
                 } ${currentMode === 'design' ? 'cursor-default' : 'cursor-pointer'}`}
+                style={selectedQuizAnswer === 2 ? { borderColor: themeColors.primary, backgroundColor: `${themeColors.primary}10` } : {}}
               >
                 <div className="flex items-start gap-2">
-                  <div className={`w-4 h-4 rounded-full border-2 flex-shrink-0 mt-0.5 flex items-center justify-center ${
-                    selectedQuizAnswer === 2 ? 'border-brand-purple' : 'border-gray-300'
-                  }`}>
+                  <div 
+                    className={`w-4 h-4 rounded-full border-2 flex-shrink-0 mt-0.5 flex items-center justify-center ${
+                      selectedQuizAnswer === 2 ? '' : 'border-gray-300'
+                    }`}
+                    style={selectedQuizAnswer === 2 ? { borderColor: themeColors.primary } : {}}
+                  >
                     {selectedQuizAnswer === 2 && (
-                      <div className="w-2 h-2 rounded-full bg-brand-purple"></div>
+                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: themeColors.primary }}></div>
                     )}
                   </div>
                   <div>
@@ -904,16 +932,20 @@ export default function EditLeadMagnetPanel({ onPreviewClick, onTabChange }: Edi
                 onClick={() => handleQuizAnswerClick(3)}
                 className={`w-full text-left p-3 border-2 rounded-lg transition-all ${
                   selectedQuizAnswer === 3 
-                    ? 'border-brand-purple bg-purple-50' 
-                    : 'border-gray-200 hover:border-brand-purple hover:bg-purple-50'
+                    ? '' 
+                    : 'border-gray-200'
                 } ${currentMode === 'design' ? 'cursor-default' : 'cursor-pointer'}`}
+                style={selectedQuizAnswer === 3 ? { borderColor: themeColors.primary, backgroundColor: `${themeColors.primary}10` } : {}}
               >
                 <div className="flex items-start gap-2">
-                  <div className={`w-4 h-4 rounded-full border-2 flex-shrink-0 mt-0.5 flex items-center justify-center ${
-                    selectedQuizAnswer === 3 ? 'border-brand-purple' : 'border-gray-300'
-                  }`}>
+                  <div 
+                    className={`w-4 h-4 rounded-full border-2 flex-shrink-0 mt-0.5 flex items-center justify-center ${
+                      selectedQuizAnswer === 3 ? '' : 'border-gray-300'
+                    }`}
+                    style={selectedQuizAnswer === 3 ? { borderColor: themeColors.primary } : {}}
+                  >
                     {selectedQuizAnswer === 3 && (
-                      <div className="w-2 h-2 rounded-full bg-brand-purple"></div>
+                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: themeColors.primary }}></div>
                     )}
                   </div>
                   <div>
@@ -938,16 +970,20 @@ export default function EditLeadMagnetPanel({ onPreviewClick, onTabChange }: Edi
                 onClick={() => handleQuizAnswerClick(4)}
                 className={`w-full text-left p-3 border-2 rounded-lg transition-all ${
                   selectedQuizAnswer === 4 
-                    ? 'border-brand-purple bg-purple-50' 
-                    : 'border-gray-200 hover:border-brand-purple hover:bg-purple-50'
+                    ? '' 
+                    : 'border-gray-200'
                 } ${currentMode === 'design' ? 'cursor-default' : 'cursor-pointer'}`}
+                style={selectedQuizAnswer === 4 ? { borderColor: themeColors.primary, backgroundColor: `${themeColors.primary}10` } : {}}
               >
                 <div className="flex items-start gap-2">
-                  <div className={`w-4 h-4 rounded-full border-2 flex-shrink-0 mt-0.5 flex items-center justify-center ${
-                    selectedQuizAnswer === 4 ? 'border-brand-purple' : 'border-gray-300'
-                  }`}>
+                  <div 
+                    className={`w-4 h-4 rounded-full border-2 flex-shrink-0 mt-0.5 flex items-center justify-center ${
+                      selectedQuizAnswer === 4 ? '' : 'border-gray-300'
+                    }`}
+                    style={selectedQuizAnswer === 4 ? { borderColor: themeColors.primary } : {}}
+                  >
                     {selectedQuizAnswer === 4 && (
-                      <div className="w-2 h-2 rounded-full bg-brand-purple"></div>
+                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: themeColors.primary }}></div>
                     )}
                   </div>
                   <div>
@@ -978,7 +1014,8 @@ export default function EditLeadMagnetPanel({ onPreviewClick, onTabChange }: Edi
               </button>
               <button 
                 onClick={handleElementClick}
-                className="px-5 py-2 bg-brand-purple text-white rounded-lg text-xs font-medium hover:bg-opacity-90 transition-all"
+                className="px-5 py-2 text-white rounded-lg text-xs font-medium hover:opacity-90 transition-all"
+                style={{ backgroundColor: themeColors.primary }}
               >
                 Next Question
               </button>
@@ -993,10 +1030,14 @@ export default function EditLeadMagnetPanel({ onPreviewClick, onTabChange }: Edi
     return (
       <>
         {/* Results Header */}
-        <div className="bg-gradient-to-br from-purple-100 via-pink-50 to-white px-6 py-8 text-center">
+        <div 
+          className="px-6 py-8 text-center"
+          style={{ background: `linear-gradient(to bottom right, ${themeColors.secondary}40, ${themeColors.secondary}20, white)` }}
+        >
           <div 
             onClick={handleIconClick}
-            className={`w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-3 ${getIconClass()}`}
+            className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 ${getIconClass()}`}
+            style={{ backgroundColor: themeColors.accent }}
           >
             <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
@@ -1026,11 +1067,12 @@ export default function EditLeadMagnetPanel({ onPreviewClick, onTabChange }: Edi
           </h2>
           
           <div className="grid grid-cols-2 gap-3 max-w-lg mx-auto">
-            <div className="bg-purple-50 p-3 rounded-lg">
+            <div className="p-3 rounded-lg" style={{ backgroundColor: `${themeColors.primary}10` }}>
               <div className="flex items-center gap-2 mb-2">
                 <div 
                   onClick={handleIconClick}
-                  className={`w-6 h-6 bg-brand-purple rounded-full flex items-center justify-center ${getIconClass()}`}
+                  className={`w-6 h-6 rounded-full flex items-center justify-center ${getIconClass()}`}
+                  style={{ backgroundColor: themeColors.primary }}
                 >
                   <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -1051,11 +1093,12 @@ export default function EditLeadMagnetPanel({ onPreviewClick, onTabChange }: Edi
               </p>
             </div>
 
-            <div className="bg-purple-50 p-3 rounded-lg">
+            <div className="p-3 rounded-lg" style={{ backgroundColor: `${themeColors.primary}10` }}>
               <div className="flex items-center gap-2 mb-2">
                 <div 
                   onClick={handleIconClick}
-                  className={`w-6 h-6 bg-brand-purple rounded-full flex items-center justify-center ${getIconClass()}`}
+                  className={`w-6 h-6 rounded-full flex items-center justify-center ${getIconClass()}`}
+                  style={{ backgroundColor: themeColors.primary }}
                 >
                   <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
@@ -1076,11 +1119,12 @@ export default function EditLeadMagnetPanel({ onPreviewClick, onTabChange }: Edi
               </p>
             </div>
 
-            <div className="bg-purple-50 p-3 rounded-lg">
+            <div className="p-3 rounded-lg" style={{ backgroundColor: `${themeColors.primary}10` }}>
               <div className="flex items-center gap-2 mb-2">
                 <div 
                   onClick={handleIconClick}
-                  className={`w-6 h-6 bg-brand-purple rounded-full flex items-center justify-center ${getIconClass()}`}
+                  className={`w-6 h-6 rounded-full flex items-center justify-center ${getIconClass()}`}
+                  style={{ backgroundColor: themeColors.primary }}
                 >
                   <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
@@ -1101,11 +1145,12 @@ export default function EditLeadMagnetPanel({ onPreviewClick, onTabChange }: Edi
               </p>
             </div>
 
-            <div className="bg-purple-50 p-3 rounded-lg">
+            <div className="p-3 rounded-lg" style={{ backgroundColor: `${themeColors.primary}10` }}>
               <div className="flex items-center gap-2 mb-2">
                 <div 
                   onClick={handleIconClick}
-                  className={`w-6 h-6 bg-brand-purple rounded-full flex items-center justify-center ${getIconClass()}`}
+                  className={`w-6 h-6 rounded-full flex items-center justify-center ${getIconClass()}`}
+                  style={{ backgroundColor: themeColors.primary }}
                 >
                   <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
@@ -1222,7 +1267,8 @@ export default function EditLeadMagnetPanel({ onPreviewClick, onTabChange }: Edi
           </p>
           <button 
             onClick={handleElementClick}
-            className={`bg-brand-purple text-white px-5 py-2 rounded-lg font-semibold text-xs ${getButtonClass()}`}
+            className={`text-white px-5 py-2 rounded-lg font-semibold text-xs ${getButtonClass()}`}
+            style={{ backgroundColor: themeColors.primary }}
           >
             Download Full Report (PDF)
           </button>

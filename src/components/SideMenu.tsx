@@ -141,25 +141,6 @@ export default function SideMenu({ activeMode, onModeChange, isCollapsed, onTogg
             )}
           </button>
 
-          {/* Controls Mode */}
-          <button 
-            onClick={() => handleModeChange('controls')}
-            className="h-[50px] relative shrink-0 w-full cursor-pointer bg-transparent border-0 group"
-          >
-            <div className="absolute flex flex-col gap-1 items-center justify-center left-0 size-[50px] top-0 z-10">
-              <FileCog className="w-5 h-5 text-[#d0d2dd]" />
-              <p className="font-medium leading-normal min-w-full relative shrink-0 text-[#d0d2dd] text-xs text-center w-[min-content] whitespace-pre-wrap">
-                Controls
-              </p>
-            </div>
-            {/* Hover state */}
-            <div className="absolute bg-[rgba(241,243,255,0.15)] left-[-4px] rounded-lg w-[58px] h-[58px] top-[-4px] opacity-0 group-hover:opacity-100 transition-opacity" />
-            {/* Active state */}
-            {activeMode === 'controls' && (
-              <div className="absolute bg-[rgba(241,243,255,0.3)] left-[-4px] rounded-lg w-[58px] h-[58px] top-[-4px]" />
-            )}
-          </button>
-
           {/* Brand Mode */}
           <button 
             onClick={() => handleModeChange('brand')}
@@ -221,6 +202,25 @@ export default function SideMenu({ activeMode, onModeChange, isCollapsed, onTogg
             <div className="absolute bg-[rgba(241,243,255,0.15)] left-[-4px] rounded-lg w-[58px] h-[58px] top-[-4px] opacity-0 group-hover:opacity-100 transition-opacity" />
             {/* Active state */}
             {activeMode === 'code' && (
+              <div className="absolute bg-[rgba(241,243,255,0.3)] left-[-4px] rounded-lg w-[58px] h-[58px] top-[-4px]" />
+            )}
+          </button>
+
+          {/* Controls Mode */}
+          <button 
+            onClick={() => handleModeChange('controls')}
+            className="h-[50px] relative shrink-0 w-full cursor-pointer bg-transparent border-0 group"
+          >
+            <div className="absolute flex flex-col gap-1 items-center justify-center left-0 size-[50px] top-0 z-10">
+              <FileCog className="w-5 h-5 text-[#d0d2dd]" />
+              <p className="font-medium leading-normal min-w-full relative shrink-0 text-[#d0d2dd] text-xs text-center w-[min-content] whitespace-pre-wrap">
+                Controls
+              </p>
+            </div>
+            {/* Hover state */}
+            <div className="absolute bg-[rgba(241,243,255,0.15)] left-[-4px] rounded-lg w-[58px] h-[58px] top-[-4px] opacity-0 group-hover:opacity-100 transition-opacity" />
+            {/* Active state */}
+            {activeMode === 'controls' && (
               <div className="absolute bg-[rgba(241,243,255,0.3)] left-[-4px] rounded-lg w-[58px] h-[58px] top-[-4px]" />
             )}
           </button>
