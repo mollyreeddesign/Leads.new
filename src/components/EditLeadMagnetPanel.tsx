@@ -23,6 +23,11 @@ export default function EditLeadMagnetPanel({ onPreviewClick, onTabChange }: Edi
   const [selectedIconHtml, setSelectedIconHtml] = useState<string>('');
   const [currentMode, setCurrentMode] = useState<'chat' | 'design' | 'controls' | 'brand' | 'code' | 'settings'>('chat');
   const [selectedQuizAnswer, setSelectedQuizAnswer] = useState<number | null>(null);
+  const [selectedSection, setSelectedSection] = useState<'resultsHeader' | 'personalityTraits' | 'careTips' | null>(null);
+  const [hasPromptBeenEntered, setHasPromptBeenEntered] = useState<{resultsHeader: boolean, personalityTraits: boolean}>({
+    resultsHeader: false,
+    personalityTraits: false
+  });
   const [selectedStyles, setSelectedStyles] = useState({
     textAlign: 'left',
     color: '#000000',
@@ -90,6 +95,24 @@ export default function EditLeadMagnetPanel({ onPreviewClick, onTabChange }: Edi
     return currentMode === 'design' 
       ? 'hover:outline hover:outline-2 hover:outline-[#836FFF] transition-all cursor-pointer' 
       : 'transition-all';
+  };
+
+  // Helper to get appropriate classes for sections in Controls mode
+  const getSectionClass = (sectionId: 'resultsHeader' | 'personalityTraits' | 'careTips') => {
+    if (currentMode !== 'controls') return '';
+    
+    const isSelected = selectedSection === sectionId;
+    return `cursor-pointer transition-all ${
+      isSelected 
+        ? 'outline outline-2 outline-[#836FFF] -outline-offset-2 rounded-lg' 
+        : 'hover:outline hover:outline-2 hover:outline-[#836FFF] hover:-outline-offset-2 hover:rounded-lg'
+    }`;
+  };
+
+  // Handle section selection in Controls mode
+  const handleSectionClick = (sectionId: 'resultsHeader' | 'personalityTraits' | 'careTips') => {
+    if (currentMode !== 'controls') return;
+    setSelectedSection(sectionId);
   };
 
   // Handle quiz answer selection
@@ -291,10 +314,23 @@ export default function EditLeadMagnetPanel({ onPreviewClick, onTabChange }: Edi
           selectedStyles={selectedStyles}
           selectedImageUrl={selectedImageUrl}
           selectedIconHtml={selectedIconHtml}
+          selectedSection={selectedSection}
           onStyleUpdate={handleStyleUpdate}
           onImageUpdate={handleImageUpdate}
           onIconUpdate={handleIconUpdate}
-          onModeChange={(mode) => setCurrentMode(mode)}
+          onPromptEntered={setHasPromptBeenEntered}
+          onModeChange={(mode) => {
+            setCurrentMode(mode);
+            if (mode === 'controls') {
+              setActivePage('results');
+            } else {
+              setSelectedSection(null);
+              setHasPromptBeenEntered({
+                resultsHeader: false,
+                personalityTraits: false
+              });
+            }
+          }}
           onThemeChange={setThemeColors}
         />
         {/* Result Panel */}
@@ -1031,12 +1067,13 @@ export default function EditLeadMagnetPanel({ onPreviewClick, onTabChange }: Edi
       <>
         {/* Results Header */}
         <div 
-          className="px-6 py-8 text-center"
+          onClick={() => handleSectionClick('resultsHeader')}
+          className={`px-6 py-8 text-center ${getSectionClass('resultsHeader')}`}
           style={{ background: `linear-gradient(to bottom right, ${themeColors.secondary}40, ${themeColors.secondary}20, white)` }}
         >
           <div 
-            onClick={handleIconClick}
-            className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 ${getIconClass()}`}
+            onClick={currentMode === 'design' ? handleIconClick : undefined}
+            className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 ${currentMode === 'design' ? getIconClass() : ''}`}
             style={{ backgroundColor: themeColors.accent }}
           >
             <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1044,24 +1081,27 @@ export default function EditLeadMagnetPanel({ onPreviewClick, onTabChange }: Edi
             </svg>
           </div>
           <h1 
-            onClick={handleElementClick}
-            className={`text-xl font-bold mb-2 ${getTextHoverClass()}`}
+            onClick={currentMode === 'design' ? handleElementClick : undefined}
+            className={`text-xl font-bold mb-2 ${currentMode === 'design' ? getTextHoverClass() : ''}`}
           >
-            Your Starfish Profile: The Explorer!
+            {hasPromptBeenEntered.resultsHeader ? 'Your Starfish Personality: ENTJ' : 'Your Starfish Profile: The Explorer!'}
           </h1>
           <p 
-            onClick={handleElementClick}
-            className={`text-gray-700 text-xs max-w-md mx-auto ${getTextHoverClass()}`}
+            onClick={currentMode === 'design' ? handleElementClick : undefined}
+            className={`text-gray-700 text-xs max-w-md mx-auto ${currentMode === 'design' ? getTextHoverClass() : ''}`}
           >
             Congratulations! Your starfish has a curious and adventurous personality. Here's what we learned about your marine friend.
           </p>
         </div>
 
         {/* Personality Traits */}
-        <div className="px-6 py-6 bg-white">
+        <div 
+          onClick={() => handleSectionClick('personalityTraits')}
+          className={`px-6 py-6 bg-white ${getSectionClass('personalityTraits')}`}
+        >
           <h2 
-            onClick={handleElementClick}
-            className={`text-base font-bold text-center mb-5 ${getTextHoverClass()}`}
+            onClick={currentMode === 'design' ? handleElementClick : undefined}
+            className={`text-base font-bold text-center mb-5 ${currentMode === 'design' ? getTextHoverClass() : ''}`}
           >
             Personality Traits
           </h2>
@@ -1070,8 +1110,8 @@ export default function EditLeadMagnetPanel({ onPreviewClick, onTabChange }: Edi
             <div className="p-3 rounded-lg" style={{ backgroundColor: `${themeColors.primary}10` }}>
               <div className="flex items-center gap-2 mb-2">
                 <div 
-                  onClick={handleIconClick}
-                  className={`w-6 h-6 rounded-full flex items-center justify-center ${getIconClass()}`}
+                  onClick={currentMode === 'design' ? handleIconClick : undefined}
+                  className={`w-6 h-6 rounded-full flex items-center justify-center ${currentMode === 'design' ? getIconClass() : ''}`}
                   style={{ backgroundColor: themeColors.primary }}
                 >
                   <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1079,25 +1119,36 @@ export default function EditLeadMagnetPanel({ onPreviewClick, onTabChange }: Edi
                   </svg>
                 </div>
                 <h3 
-                  onClick={handleElementClick}
-                  className={`font-bold text-xs ${getTextHoverClass()}`}
+                  onClick={currentMode === 'design' ? handleElementClick : undefined}
+                  className={`font-bold text-xs ${currentMode === 'design' ? getTextHoverClass() : ''}`}
                 >
                   Active
                 </h3>
               </div>
               <p 
-                onClick={handleElementClick}
-                className={`text-gray-700 text-[9px] ${getTextHoverClass()}`}
+                onClick={currentMode === 'design' ? handleElementClick : undefined}
+                className={`text-gray-700 text-[9px] ${currentMode === 'design' ? getTextHoverClass() : ''}`}
               >
                 Your starfish enjoys exploring its environment and is quite energetic.
               </p>
+              {hasPromptBeenEntered.personalityTraits && (
+                <button 
+                  className="mt-2 px-3 py-1.5 rounded-lg text-[9px] font-medium transition-colors"
+                  style={{ 
+                    backgroundColor: themeColors.primary, 
+                    color: 'white' 
+                  }}
+                >
+                  Learn More
+                </button>
+              )}
             </div>
 
             <div className="p-3 rounded-lg" style={{ backgroundColor: `${themeColors.primary}10` }}>
               <div className="flex items-center gap-2 mb-2">
                 <div 
-                  onClick={handleIconClick}
-                  className={`w-6 h-6 rounded-full flex items-center justify-center ${getIconClass()}`}
+                  onClick={currentMode === 'design' ? handleIconClick : undefined}
+                  className={`w-6 h-6 rounded-full flex items-center justify-center ${currentMode === 'design' ? getIconClass() : ''}`}
                   style={{ backgroundColor: themeColors.primary }}
                 >
                   <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1105,25 +1156,36 @@ export default function EditLeadMagnetPanel({ onPreviewClick, onTabChange }: Edi
                   </svg>
                 </div>
                 <h3 
-                  onClick={handleElementClick}
-                  className={`font-bold text-xs ${getTextHoverClass()}`}
+                  onClick={currentMode === 'design' ? handleElementClick : undefined}
+                  className={`font-bold text-xs ${currentMode === 'design' ? getTextHoverClass() : ''}`}
                 >
                   Social
                 </h3>
               </div>
               <p 
-                onClick={handleElementClick}
-                className={`text-gray-700 text-[9px] ${getTextHoverClass()}`}
+                onClick={currentMode === 'design' ? handleElementClick : undefined}
+                className={`text-gray-700 text-[9px] ${currentMode === 'design' ? getTextHoverClass() : ''}`}
               >
                 Shows interest in tankmates and interactive feeding sessions.
               </p>
+              {hasPromptBeenEntered.personalityTraits && (
+                <button 
+                  className="mt-2 px-3 py-1.5 rounded-lg text-[9px] font-medium transition-colors"
+                  style={{ 
+                    backgroundColor: themeColors.primary, 
+                    color: 'white' 
+                  }}
+                >
+                  Learn More
+                </button>
+              )}
             </div>
 
             <div className="p-3 rounded-lg" style={{ backgroundColor: `${themeColors.primary}10` }}>
               <div className="flex items-center gap-2 mb-2">
                 <div 
-                  onClick={handleIconClick}
-                  className={`w-6 h-6 rounded-full flex items-center justify-center ${getIconClass()}`}
+                  onClick={currentMode === 'design' ? handleIconClick : undefined}
+                  className={`w-6 h-6 rounded-full flex items-center justify-center ${currentMode === 'design' ? getIconClass() : ''}`}
                   style={{ backgroundColor: themeColors.primary }}
                 >
                   <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1131,25 +1193,36 @@ export default function EditLeadMagnetPanel({ onPreviewClick, onTabChange }: Edi
                   </svg>
                 </div>
                 <h3 
-                  onClick={handleElementClick}
-                  className={`font-bold text-xs ${getTextHoverClass()}`}
+                  onClick={currentMode === 'design' ? handleElementClick : undefined}
+                  className={`font-bold text-xs ${currentMode === 'design' ? getTextHoverClass() : ''}`}
                 >
                   Curious
                 </h3>
               </div>
               <p 
-                onClick={handleElementClick}
-                className={`text-gray-700 text-[9px] ${getTextHoverClass()}`}
+                onClick={currentMode === 'design' ? handleElementClick : undefined}
+                className={`text-gray-700 text-[9px] ${currentMode === 'design' ? getTextHoverClass() : ''}`}
               >
                 Loves to investigate new objects and changes in the habitat.
               </p>
+              {hasPromptBeenEntered.personalityTraits && (
+                <button 
+                  className="mt-2 px-3 py-1.5 rounded-lg text-[9px] font-medium transition-colors"
+                  style={{ 
+                    backgroundColor: themeColors.primary, 
+                    color: 'white' 
+                  }}
+                >
+                  Learn More
+                </button>
+              )}
             </div>
 
             <div className="p-3 rounded-lg" style={{ backgroundColor: `${themeColors.primary}10` }}>
               <div className="flex items-center gap-2 mb-2">
                 <div 
-                  onClick={handleIconClick}
-                  className={`w-6 h-6 rounded-full flex items-center justify-center ${getIconClass()}`}
+                  onClick={currentMode === 'design' ? handleIconClick : undefined}
+                  className={`w-6 h-6 rounded-full flex items-center justify-center ${currentMode === 'design' ? getIconClass() : ''}`}
                   style={{ backgroundColor: themeColors.primary }}
                 >
                   <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1157,27 +1230,41 @@ export default function EditLeadMagnetPanel({ onPreviewClick, onTabChange }: Edi
                   </svg>
                 </div>
                 <h3 
-                  onClick={handleElementClick}
-                  className={`font-bold text-xs ${getTextHoverClass()}`}
+                  onClick={currentMode === 'design' ? handleElementClick : undefined}
+                  className={`font-bold text-xs ${currentMode === 'design' ? getTextHoverClass() : ''}`}
                 >
                   Healthy
                 </h3>
               </div>
               <p 
-                onClick={handleElementClick}
-                className={`text-gray-700 text-[9px] ${getTextHoverClass()}`}
+                onClick={currentMode === 'design' ? handleElementClick : undefined}
+                className={`text-gray-700 text-[9px] ${currentMode === 'design' ? getTextHoverClass() : ''}`}
               >
                 Displays good appetite and normal regeneration patterns.
               </p>
+              {hasPromptBeenEntered.personalityTraits && (
+                <button 
+                  className="mt-2 px-3 py-1.5 rounded-lg text-[9px] font-medium transition-colors"
+                  style={{ 
+                    backgroundColor: themeColors.primary, 
+                    color: 'white' 
+                  }}
+                >
+                  Learn More
+                </button>
+              )}
             </div>
           </div>
         </div>
 
         {/* Care Recommendations */}
-        <div className="px-6 py-6 bg-gray-50">
+        <div 
+          onClick={() => handleSectionClick('careTips')}
+          className={`px-6 py-6 bg-gray-50 ${getSectionClass('careTips')}`}
+        >
           <h2 
-            onClick={handleElementClick}
-            className={`text-base font-bold text-center mb-5 ${getTextHoverClass()}`}
+            onClick={currentMode === 'design' ? handleElementClick : undefined}
+            className={`text-base font-bold text-center mb-5 ${currentMode === 'design' ? getTextHoverClass() : ''}`}
           >
             Personalized Care Tips
           </h2>
@@ -1191,14 +1278,14 @@ export default function EditLeadMagnetPanel({ onPreviewClick, onTabChange }: Edi
               </div>
               <div>
                 <h3 
-                  onClick={handleElementClick}
-                  className={`font-bold text-xs mb-1 ${getTextHoverClass()}`}
+                  onClick={currentMode === 'design' ? handleElementClick : undefined}
+                  className={`font-bold text-xs mb-1 ${currentMode === 'design' ? getTextHoverClass() : ''}`}
                 >
                   Enrichment Activities
                 </h3>
                 <p 
-                  onClick={handleElementClick}
-                  className={`text-gray-700 text-[9px] ${getTextHoverClass()}`}
+                  onClick={currentMode === 'design' ? handleElementClick : undefined}
+                  className={`text-gray-700 text-[9px] ${currentMode === 'design' ? getTextHoverClass() : ''}`}
                 >
                   Provide varied textures and objects for exploration. Rotate decorations monthly to keep things interesting.
                 </p>
@@ -1213,14 +1300,14 @@ export default function EditLeadMagnetPanel({ onPreviewClick, onTabChange }: Edi
               </div>
               <div>
                 <h3 
-                  onClick={handleElementClick}
-                  className={`font-bold text-xs mb-1 ${getTextHoverClass()}`}
+                  onClick={currentMode === 'design' ? handleElementClick : undefined}
+                  className={`font-bold text-xs mb-1 ${currentMode === 'design' ? getTextHoverClass() : ''}`}
                 >
                   Feeding Schedule
                 </h3>
                 <p 
-                  onClick={handleElementClick}
-                  className={`text-gray-700 text-[9px] ${getTextHoverClass()}`}
+                  onClick={currentMode === 'design' ? handleElementClick : undefined}
+                  className={`text-gray-700 text-[9px] ${currentMode === 'design' ? getTextHoverClass() : ''}`}
                 >
                   Feed 2-3 times per week with varied diet. Your active starfish may benefit from slightly more frequent feeding.
                 </p>
@@ -1235,14 +1322,14 @@ export default function EditLeadMagnetPanel({ onPreviewClick, onTabChange }: Edi
               </div>
               <div>
                 <h3 
-                  onClick={handleElementClick}
-                  className={`font-bold text-xs mb-1 ${getTextHoverClass()}`}
+                  onClick={currentMode === 'design' ? handleElementClick : undefined}
+                  className={`font-bold text-xs mb-1 ${currentMode === 'design' ? getTextHoverClass() : ''}`}
                 >
                   Tank Maintenance
                 </h3>
                 <p 
-                  onClick={handleElementClick}
-                  className={`text-gray-700 text-[9px] ${getTextHoverClass()}`}
+                  onClick={currentMode === 'design' ? handleElementClick : undefined}
+                  className={`text-gray-700 text-[9px] ${currentMode === 'design' ? getTextHoverClass() : ''}`}
                 >
                   Maintain stable water parameters. Explorer personalities thrive with consistent conditions and gentle water flow.
                 </p>

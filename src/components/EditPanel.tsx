@@ -47,6 +47,8 @@ type Message = {
   timestamp: number;
 };
 
+type SectionType = 'resultsHeader' | 'personalityTraits' | 'careTips' | null;
+
 type EditPanelProps = {
   selectedElement?: HTMLElement | SVGElement | null;
   selectedElementType?: 'text' | 'image' | 'icon' | null;
@@ -64,6 +66,8 @@ type EditPanelProps = {
   onIconUpdate?: (newIconHtml: string) => void;
   onModeChange?: (mode: ModeType) => void;
   onThemeChange?: (colors: ThemeColors) => void;
+  selectedSection?: SectionType;
+  onPromptEntered?: (entered: {resultsHeader: boolean, personalityTraits: boolean}) => void;
 };
 
 // Theme palette definitions - exported for use in other components
@@ -89,13 +93,34 @@ export type ThemeColors = {
   text: string;         // Dark text color
 };
 
-export default function EditPanel({ selectedElement, selectedElementType, selectedStyles, selectedImageUrl, selectedIconHtml, onStyleUpdate, onImageUpdate, onIconUpdate, onModeChange, onThemeChange }: EditPanelProps = {}) {
+export default function EditPanel({ selectedElement, selectedElementType, selectedStyles, selectedImageUrl, selectedIconHtml, onStyleUpdate, onImageUpdate, onIconUpdate, onModeChange, onThemeChange, selectedSection, onPromptEntered }: EditPanelProps = {}) {
   const [activeMode, setActiveMode] = useState<ModeType>('chat');
   const [messages, setMessages] = useState<Message[]>([]);
   const [isThinking, setIsThinking] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const [showPrompts, setShowPrompts] = useState(true);
   const [hasInteracted, setHasInteracted] = useState(false);
+  const [hasControlsInteracted, setHasControlsInteracted] = useState(false);
+  const [controlsMessages, setControlsMessages] = useState<Record<string, Message[]>>({
+    resultsHeader: [],
+    personalityTraits: [],
+    careTips: []
+  });
+  const [isControlsThinking, setIsControlsThinking] = useState(false);
+  const [controlsInputValue, setControlsInputValue] = useState('');
+  const [showControlsPrompts, setShowControlsPrompts] = useState<Record<string, boolean>>({
+    resultsHeader: true,
+    personalityTraits: true,
+    careTips: true
+  });
+  const [hasPromptBeenEntered, setHasPromptBeenEntered] = useState<Record<string, boolean>>({
+    resultsHeader: false,
+    personalityTraits: false,
+    careTips: false
+  });
+  const [shouldAnimatePrompts, setShouldAnimatePrompts] = useState(false);
+  const controlsMessagesContainerRef = useRef<HTMLDivElement>(null);
+  const controlsTextareaRef = useRef<HTMLTextAreaElement>(null);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [imageUrlInput, setImageUrlInput] = useState('');
   const [activeImageTab, setActiveImageTab] = useState<'url' | 'upload' | 'generate'>('url');
@@ -137,6 +162,188 @@ export default function EditPanel({ selectedElement, selectedElementType, select
       onModeChange(activeMode);
     }
   }, [activeMode, onModeChange]);
+
+  // Reset controls interaction state when mode or section changes
+  useEffect(() => {
+    if (activeMode === 'controls') {
+      setHasControlsInteracted(false);
+      // Clear input when switching sections
+      setControlsInputValue('');
+      // Reset thinking state when switching sections
+      setIsControlsThinking(false);
+      // Reset animation state when section changes
+      setShouldAnimatePrompts(false);
+      // Trigger animation when section is selected, with delay to ensure reset
+      if (selectedSection) {
+        // Use requestAnimationFrame to ensure DOM has updated
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            setShouldAnimatePrompts(true);
+          }, 100);
+        });
+      }
+    } else {
+      // Clear controls messages when leaving controls mode
+      setControlsMessages({
+        resultsHeader: [],
+        personalityTraits: [],
+        careTips: []
+      });
+      setControlsInputValue('');
+      setShowControlsPrompts({
+        resultsHeader: true,
+        personalityTraits: true,
+        careTips: true
+      });
+      setIsControlsThinking(false);
+      setHasPromptBeenEntered({
+        resultsHeader: false,
+        personalityTraits: false,
+        careTips: false
+      });
+      setShouldAnimatePrompts(false);
+      if (onPromptEntered) {
+        onPromptEntered({
+          resultsHeader: false,
+          personalityTraits: false
+        });
+      }
+    }
+  }, [activeMode, selectedSection, onPromptEntered]);
+
+  // Notify parent when prompt is entered
+  useEffect(() => {
+    if (onPromptEntered) {
+      onPromptEntered({
+        resultsHeader: hasPromptBeenEntered.resultsHeader,
+        personalityTraits: hasPromptBeenEntered.personalityTraits
+      });
+    }
+  }, [hasPromptBeenEntered.resultsHeader, hasPromptBeenEntered.personalityTraits, onPromptEntered]);
+
+  // Reset and trigger animation when prompts are shown
+  useEffect(() => {
+    if (selectedSection && showControlsPrompts[selectedSection] && (!controlsMessages[selectedSection] || controlsMessages[selectedSection].length === 0)) {
+      setShouldAnimatePrompts(false);
+      // Use requestAnimationFrame to ensure DOM has updated
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          setShouldAnimatePrompts(true);
+        }, 100);
+      });
+    }
+  }, [showControlsPrompts, controlsMessages, selectedSection]);
+
+  // Scroll to position latest messages at the top of the controls panel
+  useEffect(() => {
+    if (controlsMessagesContainerRef.current && selectedSection && controlsMessages[selectedSection]?.length > 0 && !isControlsThinking) {
+      setTimeout(() => {
+        const container = controlsMessagesContainerRef.current;
+        if (container) {
+          container.scrollTop = 0;
+        }
+      }, 100);
+    }
+  }, [controlsMessages, isControlsThinking, selectedSection]);
+
+  // Handle controls chat message send
+  const handleControlsSendMessage = () => {
+    if (!controlsInputValue.trim() || !selectedSection) return;
+
+    // Add user message
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: controlsInputValue,
+      timestamp: Date.now(),
+    };
+
+    setControlsMessages(prev => ({
+      ...prev,
+      [selectedSection]: [...(prev[selectedSection] || []), userMessage]
+    }));
+    setControlsInputValue('');
+    setShowControlsPrompts(prev => ({
+      ...prev,
+      [selectedSection]: false
+    }));
+    setIsControlsThinking(true);
+
+    // Simulate AI response after delay
+    setTimeout(() => {
+      const aiMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: "I've made the changes you requested. Would you like me to adjust anything else?",
+        timestamp: Date.now(),
+      };
+      setControlsMessages(prev => ({
+        ...prev,
+        [selectedSection]: [...(prev[selectedSection] || []), aiMessage]
+      }));
+      setIsControlsThinking(false);
+      setHasPromptBeenEntered(prev => ({
+        ...prev,
+        [selectedSection]: true
+      }));
+    }, 2500);
+  };
+
+  // Handle controls prompt click
+  const handleControlsPromptClick = (prompt: string) => {
+    setHasControlsInteracted(true);
+    setControlsInputValue(prompt);
+    setTimeout(() => {
+      controlsTextareaRef.current?.focus();
+    }, 100);
+  };
+
+  // Handle controls undo
+  const handleControlsUndo = (messageId: string) => {
+    if (!selectedSection) return;
+    const sectionMessages = controlsMessages[selectedSection] || [];
+    const messageIndex = sectionMessages.findIndex(m => m.id === messageId);
+    if (messageIndex !== -1) {
+      const messageToUndo = sectionMessages[messageIndex];
+      
+      if (messageToUndo.role === 'user') {
+        setControlsInputValue(messageToUndo.content);
+      }
+      
+      setControlsMessages(prev => ({
+        ...prev,
+        [selectedSection]: sectionMessages.slice(0, messageIndex)
+      }));
+      
+      if (messageIndex === 0) {
+        setShowControlsPrompts(prev => ({
+          ...prev,
+          [selectedSection]: true
+        }));
+      }
+      
+      setTimeout(() => {
+        controlsTextareaRef.current?.focus();
+      }, 100);
+    }
+  };
+
+  // Handle controls key down
+  const handleControlsKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleControlsSendMessage();
+    }
+  };
+
+  // Auto-resize controls textarea
+  useEffect(() => {
+    const textarea = controlsTextareaRef.current;
+    if (textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = Math.min(textarea.scrollHeight, 200) + 'px';
+    }
+  }, [controlsInputValue]);
 
   // Update image URL input when an image is selected
   useEffect(() => {
@@ -386,7 +593,7 @@ export default function EditPanel({ selectedElement, selectedElementType, select
         )}
 
         {activeMode === 'design' && (
-          <div className="flex flex-col flex-1 w-full overflow-y-auto p-4 edit-panel-scroll">
+          <div className="flex flex-col flex-1 w-full overflow-y-auto edit-panel-scroll">
             {!selectedElement ? (
               <div className="flex items-center justify-center flex-1">
             <p className="text-white opacity-70 text-center">
@@ -394,7 +601,7 @@ export default function EditPanel({ selectedElement, selectedElementType, select
                 </p>
               </div>
             ) : selectedElementType === 'image' ? (
-              <div className="space-y-6">
+              <div className="space-y-6 pt-4">
                 <h3 className="text-white font-semibold text-lg mb-4">Edit Image</h3>
                 
                 {/* Image Preview */}
@@ -491,7 +698,7 @@ export default function EditPanel({ selectedElement, selectedElementType, select
                 </div>
               </div>
             ) : selectedElementType === 'icon' ? (
-              <div className="space-y-6">
+              <div className="space-y-6 pt-4">
                 <h3 className="text-white font-semibold text-lg mb-4">Edit Icon</h3>
                 
                 {/* Icon Preview */}
@@ -687,7 +894,7 @@ export default function EditPanel({ selectedElement, selectedElementType, select
                 </div>
               </div>
             ) : (
-              <div className="space-y-6">
+              <div className="space-y-6 pt-4">
                 <h3 className="text-white font-semibold text-lg mb-4">Edit Text</h3>
                 
                 {/* Text Align */}
@@ -839,17 +1046,291 @@ export default function EditPanel({ selectedElement, selectedElementType, select
         )}
 
         {activeMode === 'controls' && (
-          <div className="flex flex-col items-center justify-center flex-1 w-full gap-4">
-            <h2 className="text-2xl font-semibold text-white">Controls</h2>
-            <p className="text-white opacity-70 text-center">
-              Control settings and options will appear here.
-            </p>
-          </div>
+          <>
+            {!selectedSection ? (
+              <div className="flex items-center justify-center flex-1 w-full">
+                <p className="text-white opacity-70 text-center">
+                  Control your lead magnet's results. Select a component from the Results page to begin.
+                </p>
+              </div>
+            ) : selectedSection === 'resultsHeader' || selectedSection === 'personalityTraits' ? (
+              <>
+                {/* Header and Info Card - Fixed at Top */}
+                <div className="shrink-0 mb-4 pt-4">
+                  {/* Header */}
+                  <div className="mb-4">
+                    <h2 className="text-xl font-semibold text-white mb-2">Controls</h2>
+                    <p className="text-white opacity-70 text-sm">
+                      Leads.new generates your leads' results with AI. Fine tune in the chat to control it.
+                    </p>
+                  </div>
+
+                  {/* Info Card */}
+                  <div className="bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.2)] rounded-lg p-3">
+                    <h3 className="text-white font-semibold text-sm mb-1">
+                      {selectedSection === 'personalityTraits' 
+                        ? 'Personality Traits Result'
+                        : 'Starfish Personality Result'
+                      }
+                    </h3>
+                    <p className="text-white opacity-70 text-sm leading-relaxed">
+                      {selectedSection === 'personalityTraits' 
+                        ? hasPromptBeenEntered.personalityTraits
+                          ? "The starfish personality traits are generated based on the result of the quiz. There are four traits with an icon, title, description and button."
+                          : "The starfish personality traits are generated based on the result of the quiz. There are four traits with an icon, title and description."
+                        : hasPromptBeenEntered.resultsHeader
+                          ? "The starfish personality is generated based on the user's quiz selections. The starfish personalities are based on Myers Briggs personality types."
+                          : "The starfish personality is generated based on the user's quiz selections. There are unlimited starfish personality types."
+                      }
+                    </p>
+                  </div>
+                </div>
+
+                {/* Scrollable Content Area with Messages */}
+                <div ref={controlsMessagesContainerRef} className="flex-1 w-full overflow-y-auto flex flex-col edit-panel-scroll min-h-0" style={{ display: 'flex', flexDirection: 'column-reverse' }}>
+                  {/* Thinking Indicator */}
+                  {isControlsThinking && (
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="animate-bounce">
+                        <svg width="21" height="22" viewBox="0 0 21 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <g opacity="0.7">
+                            <path d="M9.8685 2L3 8.62978L6.3252 12L13.1937 5.55746L15.4105 7.80427L8.64753 14.6298L11.9727 18L18.9204 11.1745V4.43405L16.5189 2H9.8685Z" stroke="#F1F3FF" strokeWidth="1.67" strokeLinejoin="round"/>
+                            <path d="M8.31836 20L8 20.3184L6.18164 18.5L6.5 18.1816L8.31836 20Z" stroke="#F1F3FF" strokeWidth="1.67" strokeLinejoin="round"/>
+                            <path d="M3.31836 13L3 13.3184L1.18164 11.5L1.5 11.1816L3.31836 13Z" stroke="#F1F3FF" strokeWidth="1.67" strokeLinejoin="round"/>
+                            <path d="M10.8252 12.5L14.3252 16" stroke="#F1F3FF" strokeWidth="1.67"/>
+                            <path d="M5.3252 6.5L8.8252 10" stroke="#F1F3FF" strokeWidth="1.67"/>
+                          </g>
+                        </svg>
+                      </div>
+                      <p className="text-white opacity-70 text-sm">Thinking...</p>
+                    </div>
+                  )}
+
+                  {/* Messages */}
+                  {selectedSection && [...(controlsMessages[selectedSection] || [])].reverse().map((message) => (
+                    <div key={message.id} className="flex flex-col">
+                      {message.role === 'user' ? (
+                        <div className="flex flex-col gap-0.5 group w-full mb-1">
+                          <div className="bg-[rgba(255,255,255,0.1)] group-hover:bg-[rgba(255,255,255,0.13)] border border-[rgba(241,243,255,0.3)] group-hover:border-brand-gray transition-all rounded-xl px-3 py-2 w-full">
+                            <p className="text-white text-sm leading-relaxed">{message.content}</p>
+                          </div>
+                          <button
+                            onClick={() => handleControlsUndo(message.id)}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity text-white text-xs flex items-center gap-1 self-end"
+                          >
+                            Undo to here
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                            </svg>
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="text-white text-sm leading-relaxed opacity-90 mb-6 px-3">
+                          {message.content}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+
+                  {/* Prompt Suggestions */}
+                  {selectedSection && showControlsPrompts[selectedSection] && (!controlsMessages[selectedSection] || controlsMessages[selectedSection].length === 0) && (
+                    <div key={selectedSection} className="flex flex-col gap-3 items-start w-full">
+                      {selectedSection === 'personalityTraits' ? (
+                        <>
+                          <button
+                            onClick={() => handleControlsPromptClick('Include a button for each personality trait')}
+                            className={`bg-[rgba(255,255,255,0.07)] flex gap-3 items-center px-3 py-2 rounded-2xl w-full hover:bg-[rgba(255,255,255,0.12)] transition-all cursor-pointer text-left ${
+                              shouldAnimatePrompts 
+                                ? 'opacity-100 translate-y-0' 
+                                : 'opacity-0 translate-y-4'
+                            }`}
+                            style={{ 
+                              transitionDelay: shouldAnimatePrompts ? '0ms' : '0ms',
+                              transitionDuration: '500ms',
+                              transitionTimingFunction: 'ease-out'
+                            }}
+                          >
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className="flex-shrink-0">
+                              <path d="M7.8612 2.53053C7.88905 2.38146 7.96815 2.24682 8.08481 2.14993C8.20148 2.05304 8.34835 2 8.5 2C8.65165 2 8.79853 2.05304 8.91519 2.14993C9.03185 2.24682 9.11095 2.38146 9.1388 2.53053C9.36114 3.70633 9.59843 5.59843 10.5 6.5C11.4016 7.40157 13.2937 7.63886 14.4695 7.8612C14.6185 7.88905 14.7532 7.96815 14.8501 8.08481C14.947 8.20148 15 8.34835 15 8.5C15 8.65165 14.947 8.79853 14.8501 8.91519C14.7532 9.03185 14.6185 9.11095 14.4695 9.1388C13.2937 9.36114 11.4016 9.59843 10.5 10.5C9.59843 11.4016 9.36114 13.2937 9.1388 14.4695C9.11095 14.6185 9.03185 14.7532 8.91519 14.8501C8.79853 14.947 8.65165 15 8.5 15C8.34835 15 8.20148 14.947 8.08481 14.8501C7.96815 14.7532 7.88905 14.6185 7.8612 14.4695C7.63886 13.2937 7.40157 11.4016 6.5 10.5C5.59843 9.59843 3.70633 9.36114 2.53053 9.1388C2.38146 9.11095 2.24682 9.03185 2.14993 8.91519C2.05304 8.79853 2 8.65165 2 8.5C2 8.34835 2.05304 8.20148 2.14993 8.08481C2.24682 7.96815 2.38146 7.88905 2.53053 7.8612C3.70633 7.63886 5.59843 7.40157 6.5 6.5C7.40157 5.59843 7.63886 3.70633 7.8612 2.53053Z" stroke="#D9D9D9" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                              <path d="M15.667 14V17.3333" stroke="#D9D9D9" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                              <path d="M17.3333 15.6665H14" stroke="#D9D9D9" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                            <p className="font-medium leading-normal text-sm text-white text-left">
+                              Include a button for each personality trait
+                            </p>
+                          </button>
+                          <button
+                            onClick={() => handleControlsPromptClick('Mention my business in each of these personality trait descriptions')}
+                            className={`bg-[rgba(255,255,255,0.07)] flex gap-3 items-center px-3 py-2 rounded-2xl w-full hover:bg-[rgba(255,255,255,0.12)] transition-all cursor-pointer text-left ${
+                              shouldAnimatePrompts 
+                                ? 'opacity-100 translate-y-0' 
+                                : 'opacity-0 translate-y-4'
+                            }`}
+                            style={{ 
+                              transitionDelay: shouldAnimatePrompts ? '100ms' : '0ms',
+                              transitionDuration: '500ms',
+                              transitionTimingFunction: 'ease-out'
+                            }}
+                          >
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className="flex-shrink-0">
+                              <path d="M7.8612 2.53053C7.88905 2.38146 7.96815 2.24682 8.08481 2.14993C8.20148 2.05304 8.34835 2 8.5 2C8.65165 2 8.79853 2.05304 8.91519 2.14993C9.03185 2.24682 9.11095 2.38146 9.1388 2.53053C9.36114 3.70633 9.59843 5.59843 10.5 6.5C11.4016 7.40157 13.2937 7.63886 14.4695 7.8612C14.6185 7.88905 14.7532 7.96815 14.8501 8.08481C14.947 8.20148 15 8.34835 15 8.5C15 8.65165 14.947 8.79853 14.8501 8.91519C14.7532 9.03185 14.6185 9.11095 14.4695 9.1388C13.2937 9.36114 11.4016 9.59843 10.5 10.5C9.59843 11.4016 9.36114 13.2937 9.1388 14.4695C9.11095 14.6185 9.03185 14.7532 8.91519 14.8501C8.79853 14.947 8.65165 15 8.5 15C8.34835 15 8.20148 14.947 8.08481 14.8501C7.96815 14.7532 7.88905 14.6185 7.8612 14.4695C7.63886 13.2937 7.40157 11.4016 6.5 10.5C5.59843 9.59843 3.70633 9.36114 2.53053 9.1388C2.38146 9.11095 2.24682 9.03185 2.14993 8.91519C2.05304 8.79853 2 8.65165 2 8.5C2 8.34835 2.05304 8.20148 2.14993 8.08481C2.24682 7.96815 2.38146 7.88905 2.53053 7.8612C3.70633 7.63886 5.59843 7.40157 6.5 6.5C7.40157 5.59843 7.63886 3.70633 7.8612 2.53053Z" stroke="#D9D9D9" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                              <path d="M15.667 14V17.3333" stroke="#D9D9D9" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                              <path d="M17.3333 15.6665H14" stroke="#D9D9D9" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                            <p className="font-medium leading-normal text-sm text-white text-left">
+                              Mention my business in each of these personality trait descriptions
+                            </p>
+                          </button>
+                          <button
+                            onClick={() => handleControlsPromptClick('Make each personality trait description more exciting')}
+                            className={`bg-[rgba(255,255,255,0.07)] flex gap-3 items-center px-3 py-2 rounded-2xl w-full hover:bg-[rgba(255,255,255,0.12)] transition-all cursor-pointer text-left ${
+                              shouldAnimatePrompts 
+                                ? 'opacity-100 translate-y-0' 
+                                : 'opacity-0 translate-y-4'
+                            }`}
+                            style={{ 
+                              transitionDelay: shouldAnimatePrompts ? '200ms' : '0ms',
+                              transitionDuration: '500ms',
+                              transitionTimingFunction: 'ease-out'
+                            }}
+                          >
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className="flex-shrink-0">
+                              <path d="M7.8612 2.53053C7.88905 2.38146 7.96815 2.24682 8.08481 2.14993C8.20148 2.05304 8.34835 2 8.5 2C8.65165 2 8.79853 2.05304 8.91519 2.14993C9.03185 2.24682 9.11095 2.38146 9.1388 2.53053C9.36114 3.70633 9.59843 5.59843 10.5 6.5C11.4016 7.40157 13.2937 7.63886 14.4695 7.8612C14.6185 7.88905 14.7532 7.96815 14.8501 8.08481C14.947 8.20148 15 8.34835 15 8.5C15 8.65165 14.947 8.79853 14.8501 8.91519C14.7532 9.03185 14.6185 9.11095 14.4695 9.1388C13.2937 9.36114 11.4016 9.59843 10.5 10.5C9.59843 11.4016 9.36114 13.2937 9.1388 14.4695C9.11095 14.6185 9.03185 14.7532 8.91519 14.8501C8.79853 14.947 8.65165 15 8.5 15C8.34835 15 8.20148 14.947 8.08481 14.8501C7.96815 14.7532 7.88905 14.6185 7.8612 14.4695C7.63886 13.2937 7.40157 11.4016 6.5 10.5C5.59843 9.59843 3.70633 9.36114 2.53053 9.1388C2.38146 9.11095 2.24682 9.03185 2.14993 8.91519C2.05304 8.79853 2 8.65165 2 8.5C2 8.34835 2.05304 8.20148 2.14993 8.08481C2.24682 7.96815 2.38146 7.88905 2.53053 7.8612C3.70633 7.63886 5.59843 7.40157 6.5 6.5C7.40157 5.59843 7.63886 3.70633 7.8612 2.53053Z" stroke="#D9D9D9" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                              <path d="M15.667 14V17.3333" stroke="#D9D9D9" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                              <path d="M17.3333 15.6665H14" stroke="#D9D9D9" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                            <p className="font-medium leading-normal text-sm text-white text-left">
+                              Make each personality trait description more exciting
+                            </p>
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => handleControlsPromptClick('Only allow for 20 personality types')}
+                            className={`bg-[rgba(255,255,255,0.07)] flex gap-3 items-center px-3 py-2 rounded-2xl w-full hover:bg-[rgba(255,255,255,0.12)] transition-all cursor-pointer text-left ${
+                              shouldAnimatePrompts 
+                                ? 'opacity-100 translate-y-0' 
+                                : 'opacity-0 translate-y-4'
+                            }`}
+                            style={{ 
+                              transitionDelay: shouldAnimatePrompts ? '0ms' : '0ms',
+                              transitionDuration: '500ms',
+                              transitionTimingFunction: 'ease-out'
+                            }}
+                          >
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className="flex-shrink-0">
+                              <path d="M7.8612 2.53053C7.88905 2.38146 7.96815 2.24682 8.08481 2.14993C8.20148 2.05304 8.34835 2 8.5 2C8.65165 2 8.79853 2.05304 8.91519 2.14993C9.03185 2.24682 9.11095 2.38146 9.1388 2.53053C9.36114 3.70633 9.59843 5.59843 10.5 6.5C11.4016 7.40157 13.2937 7.63886 14.4695 7.8612C14.6185 7.88905 14.7532 7.96815 14.8501 8.08481C14.947 8.20148 15 8.34835 15 8.5C15 8.65165 14.947 8.79853 14.8501 8.91519C14.7532 9.03185 14.6185 9.11095 14.4695 9.1388C13.2937 9.36114 11.4016 9.59843 10.5 10.5C9.59843 11.4016 9.36114 13.2937 9.1388 14.4695C9.11095 14.6185 9.03185 14.7532 8.91519 14.8501C8.79853 14.947 8.65165 15 8.5 15C8.34835 15 8.20148 14.947 8.08481 14.8501C7.96815 14.7532 7.88905 14.6185 7.8612 14.4695C7.63886 13.2937 7.40157 11.4016 6.5 10.5C5.59843 9.59843 3.70633 9.36114 2.53053 9.1388C2.38146 9.11095 2.24682 9.03185 2.14993 8.91519C2.05304 8.79853 2 8.65165 2 8.5C2 8.34835 2.05304 8.20148 2.14993 8.08481C2.24682 7.96815 2.38146 7.88905 2.53053 7.8612C3.70633 7.63886 5.59843 7.40157 6.5 6.5C7.40157 5.59843 7.63886 3.70633 7.8612 2.53053Z" stroke="#D9D9D9" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                              <path d="M15.667 14V17.3333" stroke="#D9D9D9" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                              <path d="M17.3333 15.6665H14" stroke="#D9D9D9" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                            <p className="font-medium leading-normal text-sm text-white text-left">
+                              Only allow for 20 personality types
+                            </p>
+                          </button>
+                          <button
+                            onClick={() => handleControlsPromptClick("Add personality type 'The Shy Guy!' to the possible results.")}
+                            className={`bg-[rgba(255,255,255,0.07)] flex gap-3 items-center px-3 py-2 rounded-2xl w-full hover:bg-[rgba(255,255,255,0.12)] transition-all cursor-pointer text-left ${
+                              shouldAnimatePrompts 
+                                ? 'opacity-100 translate-y-0' 
+                                : 'opacity-0 translate-y-4'
+                            }`}
+                            style={{ 
+                              transitionDelay: shouldAnimatePrompts ? '100ms' : '0ms',
+                              transitionDuration: '500ms',
+                              transitionTimingFunction: 'ease-out'
+                            }}
+                          >
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className="flex-shrink-0">
+                              <path d="M7.8612 2.53053C7.88905 2.38146 7.96815 2.24682 8.08481 2.14993C8.20148 2.05304 8.34835 2 8.5 2C8.65165 2 8.79853 2.05304 8.91519 2.14993C9.03185 2.24682 9.11095 2.38146 9.1388 2.53053C9.36114 3.70633 9.59843 5.59843 10.5 6.5C11.4016 7.40157 13.2937 7.63886 14.4695 7.8612C14.6185 7.88905 14.7532 7.96815 14.8501 8.08481C14.947 8.20148 15 8.34835 15 8.5C15 8.65165 14.947 8.79853 14.8501 8.91519C14.7532 9.03185 14.6185 9.11095 14.4695 9.1388C13.2937 9.36114 11.4016 9.59843 10.5 10.5C9.59843 11.4016 9.36114 13.2937 9.1388 14.4695C9.11095 14.6185 9.03185 14.7532 8.91519 14.8501C8.79853 14.947 8.65165 15 8.5 15C8.34835 15 8.20148 14.947 8.08481 14.8501C7.96815 14.7532 7.88905 14.6185 7.8612 14.4695C7.63886 13.2937 7.40157 11.4016 6.5 10.5C5.59843 9.59843 3.70633 9.36114 2.53053 9.1388C2.38146 9.11095 2.24682 9.03185 2.14993 8.91519C2.05304 8.79853 2 8.65165 2 8.5C2 8.34835 2.05304 8.20148 2.14993 8.08481C2.24682 7.96815 2.38146 7.88905 2.53053 7.8612C3.70633 7.63886 5.59843 7.40157 6.5 6.5C7.40157 5.59843 7.63886 3.70633 7.8612 2.53053Z" stroke="#D9D9D9" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                              <path d="M15.667 14V17.3333" stroke="#D9D9D9" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                              <path d="M17.3333 15.6665H14" stroke="#D9D9D9" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                            <p className="font-medium leading-normal text-sm text-white text-left">
+                              Add personality type 'The Shy Guy!' to the possible results.
+                            </p>
+                          </button>
+                          <button
+                            onClick={() => handleControlsPromptClick('Make all starfish personalities based on Family Guy characters.')}
+                            className={`bg-[rgba(255,255,255,0.07)] flex gap-3 items-center px-3 py-2 rounded-2xl w-full hover:bg-[rgba(255,255,255,0.12)] transition-all cursor-pointer text-left ${
+                              shouldAnimatePrompts 
+                                ? 'opacity-100 translate-y-0' 
+                                : 'opacity-0 translate-y-4'
+                            }`}
+                            style={{ 
+                              transitionDelay: shouldAnimatePrompts ? '200ms' : '0ms',
+                              transitionDuration: '500ms',
+                              transitionTimingFunction: 'ease-out'
+                            }}
+                          >
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className="flex-shrink-0">
+                              <path d="M7.8612 2.53053C7.88905 2.38146 7.96815 2.24682 8.08481 2.14993C8.20148 2.05304 8.34835 2 8.5 2C8.65165 2 8.79853 2.05304 8.91519 2.14993C9.03185 2.24682 9.11095 2.38146 9.1388 2.53053C9.36114 3.70633 9.59843 5.59843 10.5 6.5C11.4016 7.40157 13.2937 7.63886 14.4695 7.8612C14.6185 7.88905 14.7532 7.96815 14.8501 8.08481C14.947 8.20148 15 8.34835 15 8.5C15 8.65165 14.947 8.79853 14.8501 8.91519C14.7532 9.03185 14.6185 9.11095 14.4695 9.1388C13.2937 9.36114 11.4016 9.59843 10.5 10.5C9.59843 11.4016 9.36114 13.2937 9.1388 14.4695C9.11095 14.6185 9.03185 14.7532 8.91519 14.8501C8.79853 14.947 8.65165 15 8.5 15C8.34835 15 8.20148 14.947 8.08481 14.8501C7.96815 14.7532 7.88905 14.6185 7.8612 14.4695C7.63886 13.2937 7.40157 11.4016 6.5 10.5C5.59843 9.59843 3.70633 9.36114 2.53053 9.1388C2.38146 9.11095 2.24682 9.03185 2.14993 8.91519C2.05304 8.79853 2 8.65165 2 8.5C2 8.34835 2.05304 8.20148 2.14993 8.08481C2.24682 7.96815 2.38146 7.88905 2.53053 7.8612C3.70633 7.63886 5.59843 7.40157 6.5 6.5C7.40157 5.59843 7.63886 3.70633 7.8612 2.53053Z" stroke="#D9D9D9" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                              <path d="M15.667 14V17.3333" stroke="#D9D9D9" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                              <path d="M17.3333 15.6665H14" stroke="#D9D9D9" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                            <p className="font-medium leading-normal text-sm text-white text-left">
+                              Make all starfish personalities based on Family Guy characters.
+                            </p>
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  )}
+
+                </div>
+
+                {/* Prompt Suggestions - Removed, now in scrollable area */}
+
+                {/* Chat Input */}
+                <div className={`focus-within:bg-[rgba(255,255,255,0.13)] border-[0.5px] border-solid box-border flex flex-col gap-1 items-start p-2.5 rounded-lg w-full shrink-0 focus-within:border-brand-gray transition-all ${
+                  !hasControlsInteracted ? 'animate-border-sweep' : 'bg-[rgba(255,255,255,0.1)] border-[rgba(241,243,255,0.3)]'
+                }`}>
+                  <textarea
+                    ref={controlsTextareaRef}
+                    value={controlsInputValue}
+                    onChange={(e) => setControlsInputValue(e.target.value)}
+                    onKeyDown={handleControlsKeyDown}
+                    onFocus={() => setHasControlsInteracted(true)}
+                    onClick={() => setHasControlsInteracted(true)}
+                    placeholder="Tell me how you want to change the result"
+                    className="w-full bg-transparent border-none outline-none resize-none text-sm text-white placeholder-white placeholder-opacity-70 font-normal leading-relaxed overflow-hidden"
+                    style={{ minHeight: '48px', maxHeight: '200px' }}
+                  />
+                  <div className="flex items-center justify-between w-full">
+                    <button 
+                      onClick={() => setHasControlsInteracted(true)}
+                      className="bg-[rgba(241,243,255,0.3)] box-border flex gap-1 items-center justify-center px-2 py-1 rounded-lg shrink-0 hover:bg-[rgba(241,243,255,0.4)] transition-colors cursor-pointer"
+                    >
+                      <p className="font-medium leading-normal text-xs text-brand-white">Edit</p>
+                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M2.5 4.5L6 8L9.5 4.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </button>
+                    <button 
+                      onClick={() => {
+                        setHasControlsInteracted(true);
+                        handleControlsSendMessage();
+                      }}
+                      className="bg-[rgba(241,243,255,0.3)] box-border flex items-center justify-center p-1.5 rounded-full shrink-0 hover:bg-[rgba(241,243,255,0.4)] transition-colors cursor-pointer"
+                    >
+                      <ArrowUp className="w-4 h-4 text-white" />
+                    </button>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="flex items-center justify-center flex-1 w-full">
+                <p className="text-white opacity-70 text-center">
+                  Controls for this section coming soon.
+                </p>
+              </div>
+            )}
+          </>
         )}
 
         {activeMode === 'brand' && (
-          <div className="flex flex-col flex-1 w-full overflow-y-auto p-4 edit-panel-scroll">
-            <div className="space-y-6">
+          <div className="flex flex-col flex-1 w-full overflow-y-auto edit-panel-scroll">
+            <div className="space-y-6 pt-4">
               <h3 className="text-white font-semibold text-lg">Edit Brand</h3>
               
               {/* Description */}
@@ -1286,8 +1767,8 @@ export default function EditPanel({ selectedElement, selectedElementType, select
           </div>
         )}
 
-        {/* Chat Input Box - Hidden in Design and Brand Mode */}
-        {activeMode !== 'design' && activeMode !== 'brand' && (
+        {/* Chat Input Box - Hidden in Design, Brand, and Controls Mode */}
+        {activeMode !== 'design' && activeMode !== 'brand' && activeMode !== 'controls' && (
         <div className={`focus-within:bg-[rgba(255,255,255,0.13)] border-[0.5px] border-solid box-border flex flex-col gap-1 items-start p-2.5 rounded-lg shrink-0 w-full focus-within:border-brand-gray transition-all ${
           !hasInteracted ? 'animate-border-sweep' : 'bg-[rgba(255,255,255,0.1)] border-[rgba(241,243,255,0.3)]'
         }`} data-name="Chat Box">
