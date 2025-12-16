@@ -68,6 +68,8 @@ type EditPanelProps = {
   onThemeChange?: (colors: ThemeColors) => void;
   selectedSection?: SectionType;
   onPromptEntered?: (entered: {resultsHeader: boolean, personalityTraits: boolean}) => void;
+  onSectionChange?: (section: 'resultsHeader' | 'personalityTraits' | 'careTips' | null) => void;
+  onSectionHover?: (section: 'resultsHeader' | 'personalityTraits' | 'careTips' | null) => void;
 };
 
 // Theme palette definitions - exported for use in other components
@@ -93,7 +95,7 @@ export type ThemeColors = {
   text: string;         // Dark text color
 };
 
-export default function EditPanel({ selectedElement, selectedElementType, selectedStyles, selectedImageUrl, selectedIconHtml, onStyleUpdate, onImageUpdate, onIconUpdate, onModeChange, onThemeChange, selectedSection, onPromptEntered }: EditPanelProps = {}) {
+export default function EditPanel({ selectedElement, selectedElementType, selectedStyles, selectedImageUrl, selectedIconHtml, onStyleUpdate, onImageUpdate, onIconUpdate, onModeChange, onThemeChange, selectedSection, onPromptEntered, onSectionChange, onSectionHover }: EditPanelProps = {}) {
   const [activeMode, setActiveMode] = useState<ModeType>('chat');
   const [messages, setMessages] = useState<Message[]>([]);
   const [isThinking, setIsThinking] = useState(false);
@@ -1048,21 +1050,58 @@ export default function EditPanel({ selectedElement, selectedElementType, select
         {activeMode === 'controls' && (
           <>
             {!selectedSection ? (
-              <div className="flex items-center justify-center flex-1 w-full">
-                <p className="text-white opacity-70 text-center">
-                  Control your lead magnet's results. Select a component from the Results page to begin.
-                </p>
+              <div className="flex flex-col flex-1 w-full pt-4">
+                {/* Header */}
+                <div className="mb-6">
+                  <h2 className="text-xl font-semibold text-white mb-2">Controls</h2>
+                  <p className="text-white opacity-70 text-sm">
+                    Leads.new generates your lead's results with AI. Select a result component to change how it works.
+                  </p>
+                </div>
+
+                {/* Menu Options */}
+                <div className="flex flex-col gap-3">
+                  <button
+                    onClick={() => onSectionChange?.('resultsHeader')}
+                    onMouseEnter={() => onSectionHover?.('resultsHeader')}
+                    onMouseLeave={() => onSectionHover?.(null)}
+                    className="bg-[rgba(255,255,255,0.07)] hover:bg-[rgba(255,255,255,0.12)] border border-[rgba(255,255,255,0.2)] hover:border-brand-gray transition-all rounded-lg px-4 py-3 text-left"
+                  >
+                    <p className="font-medium text-sm text-white">Starfish Personality Result</p>
+                  </button>
+                  <button
+                    onClick={() => onSectionChange?.('personalityTraits')}
+                    onMouseEnter={() => onSectionHover?.('personalityTraits')}
+                    onMouseLeave={() => onSectionHover?.(null)}
+                    className="bg-[rgba(255,255,255,0.07)] hover:bg-[rgba(255,255,255,0.12)] border border-[rgba(255,255,255,0.2)] hover:border-brand-gray transition-all rounded-lg px-4 py-3 text-left"
+                  >
+                    <p className="font-medium text-sm text-white">Personality Traits Result</p>
+                  </button>
+                  <button
+                    onClick={() => onSectionChange?.('careTips')}
+                    onMouseEnter={() => onSectionHover?.('careTips')}
+                    onMouseLeave={() => onSectionHover?.(null)}
+                    className="bg-[rgba(255,255,255,0.07)] hover:bg-[rgba(255,255,255,0.12)] border border-[rgba(255,255,255,0.2)] hover:border-brand-gray transition-all rounded-lg px-4 py-3 text-left"
+                  >
+                    <p className="font-medium text-sm text-white">Personalized Care Tips Result</p>
+                  </button>
+                </div>
               </div>
-            ) : selectedSection === 'resultsHeader' || selectedSection === 'personalityTraits' ? (
+            ) : selectedSection === 'resultsHeader' || selectedSection === 'personalityTraits' || selectedSection === 'careTips' ? (
               <>
                 {/* Header and Info Card - Fixed at Top */}
                 <div className="shrink-0 mb-4 pt-4">
                   {/* Header */}
                   <div className="mb-4">
-                    <h2 className="text-xl font-semibold text-white mb-2">Controls</h2>
-                    <p className="text-white opacity-70 text-sm">
-                      Leads.new generates your leads' results with AI. Fine tune in the chat to control it.
-                    </p>
+                    <button
+                      onClick={() => onSectionChange?.(null)}
+                      className="flex items-center gap-2 mb-4 text-white opacity-70 hover:opacity-100 transition-opacity"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M10 12L6 8L10 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                      <span className="text-sm font-medium">Back to components</span>
+                    </button>
                   </div>
 
                   {/* Info Card */}
@@ -1070,6 +1109,8 @@ export default function EditPanel({ selectedElement, selectedElementType, select
                     <h3 className="text-white font-semibold text-sm mb-1">
                       {selectedSection === 'personalityTraits' 
                         ? 'Personality Traits Result'
+                        : selectedSection === 'careTips'
+                        ? 'Personalized Care Tips Result'
                         : 'Starfish Personality Result'
                       }
                     </h3>
@@ -1078,6 +1119,10 @@ export default function EditPanel({ selectedElement, selectedElementType, select
                         ? hasPromptBeenEntered.personalityTraits
                           ? "The starfish personality traits are generated based on the result of the quiz. There are four traits with an icon, title, description and button."
                           : "The starfish personality traits are generated based on the result of the quiz. There are four traits with an icon, title and description."
+                        : selectedSection === 'careTips'
+                        ? hasPromptBeenEntered.careTips
+                          ? "The personalized care tips are generated based on the result of the quiz. There are multiple tips with an icon, title, description and button."
+                          : "The personalized care tips are generated based on the result of the quiz. There are multiple tips with an icon, title and description."
                         : hasPromptBeenEntered.resultsHeader
                           ? "The starfish personality is generated based on the user's quiz selections. The starfish personalities are based on Myers Briggs personality types."
                           : "The starfish personality is generated based on the user's quiz selections. There are unlimited starfish personality types."
@@ -1138,7 +1183,7 @@ export default function EditPanel({ selectedElement, selectedElementType, select
                       {selectedSection === 'personalityTraits' ? (
                         <>
                           <button
-                            onClick={() => handleControlsPromptClick('Include a button for each personality trait')}
+                            onClick={() => handleControlsPromptClick('Show 6 personality traits in results.')}
                             className={`bg-[rgba(255,255,255,0.07)] flex gap-3 items-center px-3 py-2 rounded-2xl w-full hover:bg-[rgba(255,255,255,0.12)] transition-all cursor-pointer text-left ${
                               shouldAnimatePrompts 
                                 ? 'opacity-100 translate-y-0' 
@@ -1156,11 +1201,11 @@ export default function EditPanel({ selectedElement, selectedElementType, select
                               <path d="M17.3333 15.6665H14" stroke="#D9D9D9" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
                             </svg>
                             <p className="font-medium leading-normal text-sm text-white text-left">
-                              Include a button for each personality trait
+                              Show 6 personality traits in results.
                             </p>
                           </button>
                           <button
-                            onClick={() => handleControlsPromptClick('Mention my business in each of these personality trait descriptions')}
+                            onClick={() => handleControlsPromptClick('Assign a percentage to each personality trait.')}
                             className={`bg-[rgba(255,255,255,0.07)] flex gap-3 items-center px-3 py-2 rounded-2xl w-full hover:bg-[rgba(255,255,255,0.12)] transition-all cursor-pointer text-left ${
                               shouldAnimatePrompts 
                                 ? 'opacity-100 translate-y-0' 
@@ -1178,11 +1223,11 @@ export default function EditPanel({ selectedElement, selectedElementType, select
                               <path d="M17.3333 15.6665H14" stroke="#D9D9D9" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
                             </svg>
                             <p className="font-medium leading-normal text-sm text-white text-left">
-                              Mention my business in each of these personality trait descriptions
+                              Assign a percentage to each personality trait.
                             </p>
                           </button>
                           <button
-                            onClick={() => handleControlsPromptClick('Make each personality trait description more exciting')}
+                            onClick={() => handleControlsPromptClick('Show a descriptive paragraph instead of 4 separate personality trait sections.')}
                             className={`bg-[rgba(255,255,255,0.07)] flex gap-3 items-center px-3 py-2 rounded-2xl w-full hover:bg-[rgba(255,255,255,0.12)] transition-all cursor-pointer text-left ${
                               shouldAnimatePrompts 
                                 ? 'opacity-100 translate-y-0' 
@@ -1200,7 +1245,76 @@ export default function EditPanel({ selectedElement, selectedElementType, select
                               <path d="M17.3333 15.6665H14" stroke="#D9D9D9" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
                             </svg>
                             <p className="font-medium leading-normal text-sm text-white text-left">
-                              Make each personality trait description more exciting
+                              Show a descriptive paragraph instead of 4 separate personality trait sections.
+                            </p>
+                          </button>
+                        </>
+                      ) : selectedSection === 'careTips' ? (
+                        <>
+                          <button
+                            onClick={() => handleControlsPromptClick('Show 6 care tips in results.')}
+                            className={`bg-[rgba(255,255,255,0.07)] flex gap-3 items-center px-3 py-2 rounded-2xl w-full hover:bg-[rgba(255,255,255,0.12)] transition-all cursor-pointer text-left ${
+                              shouldAnimatePrompts 
+                                ? 'opacity-100 translate-y-0' 
+                                : 'opacity-0 translate-y-4'
+                            }`}
+                            style={{ 
+                              transitionDelay: shouldAnimatePrompts ? '0ms' : '0ms',
+                              transitionDuration: '500ms',
+                              transitionTimingFunction: 'ease-out'
+                            }}
+                          >
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className="flex-shrink-0">
+                              <path d="M7.8612 2.53053C7.88905 2.38146 7.96815 2.24682 8.08481 2.14993C8.20148 2.05304 8.34835 2 8.5 2C8.65165 2 8.79853 2.05304 8.91519 2.14993C9.03185 2.24682 9.11095 2.38146 9.1388 2.53053C9.36114 3.70633 9.59843 5.59843 10.5 6.5C11.4016 7.40157 13.2937 7.63886 14.4695 7.8612C14.6185 7.88905 14.7532 7.96815 14.8501 8.08481C14.947 8.20148 15 8.34835 15 8.5C15 8.65165 14.947 8.79853 14.8501 8.91519C14.7532 9.03185 14.6185 9.11095 14.4695 9.1388C13.2937 9.36114 11.4016 9.59843 10.5 10.5C9.59843 11.4016 9.36114 13.2937 9.1388 14.4695C9.11095 14.6185 9.03185 14.7532 8.91519 14.8501C8.79853 14.947 8.65165 15 8.5 15C8.34835 15 8.20148 14.947 8.08481 14.8501C7.96815 14.7532 7.88905 14.6185 7.8612 14.4695C7.63886 13.2937 7.40157 11.4016 6.5 10.5C5.59843 9.59843 3.70633 9.36114 2.53053 9.1388C2.38146 9.11095 2.24682 9.03185 2.14993 8.91519C2.05304 8.79853 2 8.65165 2 8.5C2 8.34835 2.05304 8.20148 2.14993 8.08481C2.24682 7.96815 2.38146 7.88905 2.53053 7.8612C3.70633 7.63886 5.59843 7.40157 6.5 6.5C7.40157 5.59843 7.63886 3.70633 7.8612 2.53053Z" stroke="#D9D9D9" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                              <path d="M15.667 14V17.3333" stroke="#D9D9D9" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                              <path d="M17.3333 15.6665H14" stroke="#D9D9D9" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                            <p className="font-medium leading-normal text-sm text-white text-left">
+                              Show 6 care tips in results.
+                            </p>
+                          </button>
+                          <button
+                            onClick={() => handleControlsPromptClick('Assign a priority level to each care tip.')}
+                            className={`bg-[rgba(255,255,255,0.07)] flex gap-3 items-center px-3 py-2 rounded-2xl w-full hover:bg-[rgba(255,255,255,0.12)] transition-all cursor-pointer text-left ${
+                              shouldAnimatePrompts 
+                                ? 'opacity-100 translate-y-0' 
+                                : 'opacity-0 translate-y-4'
+                            }`}
+                            style={{ 
+                              transitionDelay: shouldAnimatePrompts ? '100ms' : '0ms',
+                              transitionDuration: '500ms',
+                              transitionTimingFunction: 'ease-out'
+                            }}
+                          >
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className="flex-shrink-0">
+                              <path d="M7.8612 2.53053C7.88905 2.38146 7.96815 2.24682 8.08481 2.14993C8.20148 2.05304 8.34835 2 8.5 2C8.65165 2 8.79853 2.05304 8.91519 2.14993C9.03185 2.24682 9.11095 2.38146 9.1388 2.53053C9.36114 3.70633 9.59843 5.59843 10.5 6.5C11.4016 7.40157 13.2937 7.63886 14.4695 7.8612C14.6185 7.88905 14.7532 7.96815 14.8501 8.08481C14.947 8.20148 15 8.34835 15 8.5C15 8.65165 14.947 8.79853 14.8501 8.91519C14.7532 9.03185 14.6185 9.11095 14.4695 9.1388C13.2937 9.36114 11.4016 9.59843 10.5 10.5C9.59843 11.4016 9.36114 13.2937 9.1388 14.4695C9.11095 14.6185 9.03185 14.7532 8.91519 14.8501C8.79853 14.947 8.65165 15 8.5 15C8.34835 15 8.20148 14.947 8.08481 14.8501C7.96815 14.7532 7.88905 14.6185 7.8612 14.4695C7.63886 13.2937 7.40157 11.4016 6.5 10.5C5.59843 9.59843 3.70633 9.36114 2.53053 9.1388C2.38146 9.11095 2.24682 9.03185 2.14993 8.91519C2.05304 8.79853 2 8.65165 2 8.5C2 8.34835 2.05304 8.20148 2.14993 8.08481C2.24682 7.96815 2.38146 7.88905 2.53053 7.8612C3.70633 7.63886 5.59843 7.40157 6.5 6.5C7.40157 5.59843 7.63886 3.70633 7.8612 2.53053Z" stroke="#D9D9D9" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                              <path d="M15.667 14V17.3333" stroke="#D9D9D9" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                              <path d="M17.3333 15.6665H14" stroke="#D9D9D9" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                            <p className="font-medium leading-normal text-sm text-white text-left">
+                              Assign a priority level to each care tip.
+                            </p>
+                          </button>
+                          <button
+                            onClick={() => handleControlsPromptClick('Show a descriptive paragraph instead of 4 separate care tip sections.')}
+                            className={`bg-[rgba(255,255,255,0.07)] flex gap-3 items-center px-3 py-2 rounded-2xl w-full hover:bg-[rgba(255,255,255,0.12)] transition-all cursor-pointer text-left ${
+                              shouldAnimatePrompts 
+                                ? 'opacity-100 translate-y-0' 
+                                : 'opacity-0 translate-y-4'
+                            }`}
+                            style={{ 
+                              transitionDelay: shouldAnimatePrompts ? '200ms' : '0ms',
+                              transitionDuration: '500ms',
+                              transitionTimingFunction: 'ease-out'
+                            }}
+                          >
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className="flex-shrink-0">
+                              <path d="M7.8612 2.53053C7.88905 2.38146 7.96815 2.24682 8.08481 2.14993C8.20148 2.05304 8.34835 2 8.5 2C8.65165 2 8.79853 2.05304 8.91519 2.14993C9.03185 2.24682 9.11095 2.38146 9.1388 2.53053C9.36114 3.70633 9.59843 5.59843 10.5 6.5C11.4016 7.40157 13.2937 7.63886 14.4695 7.8612C14.6185 7.88905 14.7532 7.96815 14.8501 8.08481C14.947 8.20148 15 8.34835 15 8.5C15 8.65165 14.947 8.79853 14.8501 8.91519C14.7532 9.03185 14.6185 9.11095 14.4695 9.1388C13.2937 9.36114 11.4016 9.59843 10.5 10.5C9.59843 11.4016 9.36114 13.2937 9.1388 14.4695C9.11095 14.6185 9.03185 14.7532 8.91519 14.8501C8.79853 14.947 8.65165 15 8.5 15C8.34835 15 8.20148 14.947 8.08481 14.8501C7.96815 14.7532 7.88905 14.6185 7.8612 14.4695C7.63886 13.2937 7.40157 11.4016 6.5 10.5C5.59843 9.59843 3.70633 9.36114 2.53053 9.1388C2.38146 9.11095 2.24682 9.03185 2.14993 8.91519C2.05304 8.79853 2 8.65165 2 8.5C2 8.34835 2.05304 8.20148 2.14993 8.08481C2.24682 7.96815 2.38146 7.88905 2.53053 7.8612C3.70633 7.63886 5.59843 7.40157 6.5 6.5C7.40157 5.59843 7.63886 3.70633 7.8612 2.53053Z" stroke="#D9D9D9" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                              <path d="M15.667 14V17.3333" stroke="#D9D9D9" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                              <path d="M17.3333 15.6665H14" stroke="#D9D9D9" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                            <p className="font-medium leading-normal text-sm text-white text-left">
+                              Show a descriptive paragraph instead of 4 separate care tip sections.
                             </p>
                           </button>
                         </>
@@ -1251,7 +1365,7 @@ export default function EditPanel({ selectedElement, selectedElementType, select
                             </p>
                           </button>
                           <button
-                            onClick={() => handleControlsPromptClick('Make all starfish personalities based on Family Guy characters.')}
+                            onClick={() => handleControlsPromptClick('Make all starfish personalities based on Myers Briggs personalities.')}
                             className={`bg-[rgba(255,255,255,0.07)] flex gap-3 items-center px-3 py-2 rounded-2xl w-full hover:bg-[rgba(255,255,255,0.12)] transition-all cursor-pointer text-left ${
                               shouldAnimatePrompts 
                                 ? 'opacity-100 translate-y-0' 
@@ -1269,7 +1383,7 @@ export default function EditPanel({ selectedElement, selectedElementType, select
                               <path d="M17.3333 15.6665H14" stroke="#D9D9D9" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
                             </svg>
                             <p className="font-medium leading-normal text-sm text-white text-left">
-                              Make all starfish personalities based on Family Guy characters.
+                              Make all starfish personalities based on Myers Briggs personalities.
                             </p>
                           </button>
                         </>

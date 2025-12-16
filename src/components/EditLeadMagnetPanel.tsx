@@ -24,6 +24,7 @@ export default function EditLeadMagnetPanel({ onPreviewClick, onTabChange }: Edi
   const [currentMode, setCurrentMode] = useState<'chat' | 'design' | 'controls' | 'brand' | 'code' | 'settings'>('chat');
   const [selectedQuizAnswer, setSelectedQuizAnswer] = useState<number | null>(null);
   const [selectedSection, setSelectedSection] = useState<'resultsHeader' | 'personalityTraits' | 'careTips' | null>(null);
+  const [hoveredSection, setHoveredSection] = useState<'resultsHeader' | 'personalityTraits' | 'careTips' | null>(null);
   const [hasPromptBeenEntered, setHasPromptBeenEntered] = useState<{resultsHeader: boolean, personalityTraits: boolean}>({
     resultsHeader: false,
     personalityTraits: false
@@ -102,17 +103,26 @@ export default function EditLeadMagnetPanel({ onPreviewClick, onTabChange }: Edi
     if (currentMode !== 'controls') return '';
     
     const isSelected = selectedSection === sectionId;
+    const isHovered = hoveredSection === sectionId;
     return `cursor-pointer transition-all ${
       isSelected 
         ? 'outline outline-2 outline-[#836FFF] -outline-offset-2 rounded-lg' 
+        : isHovered
+        ? 'outline outline-2 outline-[#836FFF] -outline-offset-2 rounded-lg'
         : 'hover:outline hover:outline-2 hover:outline-[#836FFF] hover:-outline-offset-2 hover:rounded-lg'
     }`;
   };
 
   // Handle section selection in Controls mode
-  const handleSectionClick = (sectionId: 'resultsHeader' | 'personalityTraits' | 'careTips') => {
+  const handleSectionClick = (sectionId: 'resultsHeader' | 'personalityTraits' | 'careTips' | null) => {
     if (currentMode !== 'controls') return;
     setSelectedSection(sectionId);
+  };
+
+  // Handle section hover in Controls mode
+  const handleSectionHover = (sectionId: 'resultsHeader' | 'personalityTraits' | 'careTips' | null) => {
+    if (currentMode !== 'controls') return;
+    setHoveredSection(sectionId);
   };
 
   // Handle quiz answer selection
@@ -319,12 +329,15 @@ export default function EditLeadMagnetPanel({ onPreviewClick, onTabChange }: Edi
           onImageUpdate={handleImageUpdate}
           onIconUpdate={handleIconUpdate}
           onPromptEntered={setHasPromptBeenEntered}
+          onSectionChange={handleSectionClick}
+          onSectionHover={handleSectionHover}
           onModeChange={(mode) => {
             setCurrentMode(mode);
             if (mode === 'controls') {
               setActivePage('results');
             } else {
               setSelectedSection(null);
+              setHoveredSection(null);
               setHasPromptBeenEntered({
                 resultsHeader: false,
                 personalityTraits: false
