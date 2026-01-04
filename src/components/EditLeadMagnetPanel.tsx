@@ -37,6 +37,7 @@ export default function EditLeadMagnetPanel({ onPreviewClick, onTabChange }: Edi
     fontFamily: 'Onest'
   });
   const [quizTitle, setQuizTitle] = useState('Starfish Personality Quiz');
+  const [isQuizJazzedUp, setIsQuizJazzedUp] = useState(false);
   
   // Theme colors state - default to Original palette
   const [themeColors, setThemeColors] = useState<ThemeColors>({
@@ -332,7 +333,10 @@ export default function EditLeadMagnetPanel({ onPreviewClick, onTabChange }: Edi
           onPromptEntered={setHasPromptBeenEntered}
           onSectionChange={handleSectionClick}
           onSectionHover={handleSectionHover}
-          onTitleChange={setQuizTitle}
+          onTitleChange={(title) => {
+            setQuizTitle(title);
+            setIsQuizJazzedUp(true);
+          }}
           onModeChange={(mode) => {
             setCurrentMode(mode);
             if (mode === 'controls') {
@@ -469,7 +473,9 @@ export default function EditLeadMagnetPanel({ onPreviewClick, onTabChange }: Edi
           >
             <div 
               onClick={handleBackgroundClick}
-              className="bg-white rounded-lg shadow-lg overflow-hidden"
+              className={`rounded-lg shadow-lg overflow-hidden transition-all duration-500 ${
+                isQuizJazzedUp && activePage === 'gate' ? 'bg-pink-100' : 'bg-white'
+              }`}
             >
               {activePage === 'dataCapture' && renderDataCapturePage()}
               {activePage === 'gate' && renderGatePage()}
@@ -846,31 +852,52 @@ export default function EditLeadMagnetPanel({ onPreviewClick, onTabChange }: Edi
       <>
         {/* Quiz Header */}
         <div 
-          className="px-6 py-6 text-center"
-          style={{ background: `linear-gradient(to bottom right, ${themeColors.secondary}40, ${themeColors.secondary}20, white)` }}
+          className={`px-6 py-6 text-center transition-all duration-500 ${
+            isQuizJazzedUp ? 'relative overflow-hidden' : ''
+          }`}
+          style={isQuizJazzedUp 
+            ? { 
+                background: 'linear-gradient(135deg, #836FFF 0%, #A78BFA 25%, #EC4899 50%, #F472B6 75%, #F5D0FE 100%)',
+                boxShadow: '0 10px 40px rgba(131, 111, 255, 0.3)'
+              }
+            : { background: `linear-gradient(to bottom right, ${themeColors.secondary}40, ${themeColors.secondary}20, white)` }
+          }
         >
+          {isQuizJazzedUp && (
+            <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-transparent pointer-events-none" />
+          )}
           <p 
             onClick={handleElementClick}
-            className={`text-[8px] font-semibold text-gray-600 mb-2 uppercase tracking-wide ${getTextHoverClass()}`}
+            className={`text-[8px] font-semibold mb-2 uppercase tracking-wide ${getTextHoverClass()} relative z-10 ${
+              isQuizJazzedUp ? 'text-white/90' : 'text-gray-600'
+            }`}
           >
             ZORVO
           </p>
           <h1 
             onClick={handleElementClick}
-            className={`text-xl font-bold mb-2 ${getTextHoverClass()}`}
+            className={`text-xl font-bold mb-2 ${getTextHoverClass()} relative z-10 ${
+              isQuizJazzedUp ? 'text-white drop-shadow-lg' : ''
+            }`}
           >
             {quizTitle}
           </h1>
           <p 
             onClick={handleElementClick}
-            className={`text-gray-600 text-xs ${getTextHoverClass()}`}
+            className={`text-xs ${getTextHoverClass()} relative z-10 ${
+              isQuizJazzedUp ? 'text-white/90' : 'text-gray-600'
+            }`}
           >
             Answer these questions to discover your starfish's unique traits
           </p>
         </div>
 
         {/* Progress Bar */}
-        <div className="px-6 py-3 bg-white border-b border-gray-200">
+        <div className={`px-6 py-3 border-b transition-all duration-500 ${
+          isQuizJazzedUp 
+            ? 'bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200' 
+            : 'bg-white border-gray-200'
+        }`}>
           <div className="flex items-center justify-between mb-1">
             <span 
               onClick={handleElementClick}
@@ -886,17 +913,33 @@ export default function EditLeadMagnetPanel({ onPreviewClick, onTabChange }: Edi
               37% Complete
             </span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-1.5">
-            <div className="h-1.5 rounded-full transition-all" style={{ width: '37%', backgroundColor: themeColors.primary }}></div>
+          <div className={`w-full rounded-full h-1.5 transition-all duration-500 ${
+            isQuizJazzedUp ? 'bg-purple-200' : 'bg-gray-200'
+          }`}>
+            <div 
+              className={`h-1.5 rounded-full transition-all ${
+                isQuizJazzedUp ? 'bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500 shadow-lg' : ''
+              }`}
+              style={{ 
+                width: '37%', 
+                backgroundColor: isQuizJazzedUp ? undefined : themeColors.primary 
+              }}
+            ></div>
           </div>
         </div>
 
         {/* Quiz Question */}
-        <div className="px-6 py-8 bg-white">
+        <div className={`px-6 py-8 transition-all duration-500 ${
+          isQuizJazzedUp 
+            ? 'bg-gradient-to-br from-purple-50 via-white to-pink-50' 
+            : 'bg-white'
+        }`}>
           <div className="max-w-xl mx-auto">
             <h2 
               onClick={handleElementClick}
-              className={`text-base font-bold mb-4 text-center ${getTextHoverClass()}`}
+              className={`text-base font-bold mb-4 text-center ${getTextHoverClass()} ${
+                isQuizJazzedUp ? 'text-purple-900' : ''
+              }`}
             >
               How active is your starfish during feeding time?
             </h2>
@@ -908,19 +951,36 @@ export default function EditLeadMagnetPanel({ onPreviewClick, onTabChange }: Edi
                 className={`w-full text-left p-3 border-2 rounded-lg transition-all ${
                   selectedQuizAnswer === 1 
                     ? '' 
-                    : 'border-gray-200'
-                } ${currentMode === 'design' ? 'cursor-default' : 'cursor-pointer'}`}
-                style={selectedQuizAnswer === 1 ? { borderColor: themeColors.primary, backgroundColor: `${themeColors.primary}10` } : {}}
+                    : isQuizJazzedUp ? 'border-purple-200 bg-white hover:border-purple-300 hover:shadow-md' : 'border-gray-200'
+                } ${currentMode === 'design' ? 'cursor-default' : 'cursor-pointer'} ${
+                  isQuizJazzedUp && selectedQuizAnswer === 1 ? 'shadow-lg' : ''
+                }`}
+                style={selectedQuizAnswer === 1 
+                  ? isQuizJazzedUp 
+                    ? { 
+                        borderColor: '#A78BFA', 
+                        background: 'linear-gradient(135deg, rgba(167, 139, 250, 0.15), rgba(236, 72, 153, 0.1))',
+                        boxShadow: '0 4px 12px rgba(167, 139, 250, 0.3)'
+                      }
+                    : { borderColor: themeColors.primary, backgroundColor: `${themeColors.primary}10` }
+                  : {}
+                }
               >
                 <div className="flex items-start gap-2">
                   <div 
                     className={`w-4 h-4 rounded-full border-2 flex-shrink-0 mt-0.5 flex items-center justify-center ${
                       selectedQuizAnswer === 1 ? '' : 'border-gray-300'
                     }`}
-                    style={selectedQuizAnswer === 1 ? { borderColor: themeColors.primary } : {}}
+                    style={selectedQuizAnswer === 1 
+                      ? { borderColor: isQuizJazzedUp ? '#A78BFA' : themeColors.primary } 
+                      : {}
+                    }
                   >
                     {selectedQuizAnswer === 1 && (
-                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: themeColors.primary }}></div>
+                      <div 
+                        className={`w-2 h-2 rounded-full ${isQuizJazzedUp ? 'ring-2 ring-purple-300' : ''}`}
+                        style={{ backgroundColor: isQuizJazzedUp ? '#A78BFA' : themeColors.primary }}
+                      ></div>
                     )}
                   </div>
                   <div>
@@ -946,19 +1006,36 @@ export default function EditLeadMagnetPanel({ onPreviewClick, onTabChange }: Edi
                 className={`w-full text-left p-3 border-2 rounded-lg transition-all ${
                   selectedQuizAnswer === 2 
                     ? '' 
-                    : 'border-gray-200'
-                } ${currentMode === 'design' ? 'cursor-default' : 'cursor-pointer'}`}
-                style={selectedQuizAnswer === 2 ? { borderColor: themeColors.primary, backgroundColor: `${themeColors.primary}10` } : {}}
+                    : isQuizJazzedUp ? 'border-purple-200 bg-white hover:border-purple-300 hover:shadow-md' : 'border-gray-200'
+                } ${currentMode === 'design' ? 'cursor-default' : 'cursor-pointer'} ${
+                  isQuizJazzedUp && selectedQuizAnswer === 2 ? 'shadow-lg' : ''
+                }`}
+                style={selectedQuizAnswer === 2 
+                  ? isQuizJazzedUp 
+                    ? { 
+                        borderColor: '#A78BFA', 
+                        background: 'linear-gradient(135deg, rgba(167, 139, 250, 0.15), rgba(236, 72, 153, 0.1))',
+                        boxShadow: '0 4px 12px rgba(167, 139, 250, 0.3)'
+                      }
+                    : { borderColor: themeColors.primary, backgroundColor: `${themeColors.primary}10` }
+                  : {}
+                }
               >
                 <div className="flex items-start gap-2">
                   <div 
                     className={`w-4 h-4 rounded-full border-2 flex-shrink-0 mt-0.5 flex items-center justify-center ${
                       selectedQuizAnswer === 2 ? '' : 'border-gray-300'
                     }`}
-                    style={selectedQuizAnswer === 2 ? { borderColor: themeColors.primary } : {}}
+                    style={selectedQuizAnswer === 2 
+                      ? { borderColor: isQuizJazzedUp ? '#A78BFA' : themeColors.primary } 
+                      : {}
+                    }
                   >
                     {selectedQuizAnswer === 2 && (
-                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: themeColors.primary }}></div>
+                      <div 
+                        className={`w-2 h-2 rounded-full ${isQuizJazzedUp ? 'ring-2 ring-purple-300' : ''}`}
+                        style={{ backgroundColor: isQuizJazzedUp ? '#A78BFA' : themeColors.primary }}
+                      ></div>
                     )}
                   </div>
                   <div>
@@ -984,19 +1061,36 @@ export default function EditLeadMagnetPanel({ onPreviewClick, onTabChange }: Edi
                 className={`w-full text-left p-3 border-2 rounded-lg transition-all ${
                   selectedQuizAnswer === 3 
                     ? '' 
-                    : 'border-gray-200'
-                } ${currentMode === 'design' ? 'cursor-default' : 'cursor-pointer'}`}
-                style={selectedQuizAnswer === 3 ? { borderColor: themeColors.primary, backgroundColor: `${themeColors.primary}10` } : {}}
+                    : isQuizJazzedUp ? 'border-purple-200 bg-white hover:border-purple-300 hover:shadow-md' : 'border-gray-200'
+                } ${currentMode === 'design' ? 'cursor-default' : 'cursor-pointer'} ${
+                  isQuizJazzedUp && selectedQuizAnswer === 3 ? 'shadow-lg' : ''
+                }`}
+                style={selectedQuizAnswer === 3 
+                  ? isQuizJazzedUp 
+                    ? { 
+                        borderColor: '#A78BFA', 
+                        background: 'linear-gradient(135deg, rgba(167, 139, 250, 0.15), rgba(236, 72, 153, 0.1))',
+                        boxShadow: '0 4px 12px rgba(167, 139, 250, 0.3)'
+                      }
+                    : { borderColor: themeColors.primary, backgroundColor: `${themeColors.primary}10` }
+                  : {}
+                }
               >
                 <div className="flex items-start gap-2">
                   <div 
                     className={`w-4 h-4 rounded-full border-2 flex-shrink-0 mt-0.5 flex items-center justify-center ${
                       selectedQuizAnswer === 3 ? '' : 'border-gray-300'
                     }`}
-                    style={selectedQuizAnswer === 3 ? { borderColor: themeColors.primary } : {}}
+                    style={selectedQuizAnswer === 3 
+                      ? { borderColor: isQuizJazzedUp ? '#A78BFA' : themeColors.primary } 
+                      : {}
+                    }
                   >
                     {selectedQuizAnswer === 3 && (
-                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: themeColors.primary }}></div>
+                      <div 
+                        className={`w-2 h-2 rounded-full ${isQuizJazzedUp ? 'ring-2 ring-purple-300' : ''}`}
+                        style={{ backgroundColor: isQuizJazzedUp ? '#A78BFA' : themeColors.primary }}
+                      ></div>
                     )}
                   </div>
                   <div>
@@ -1022,19 +1116,36 @@ export default function EditLeadMagnetPanel({ onPreviewClick, onTabChange }: Edi
                 className={`w-full text-left p-3 border-2 rounded-lg transition-all ${
                   selectedQuizAnswer === 4 
                     ? '' 
-                    : 'border-gray-200'
-                } ${currentMode === 'design' ? 'cursor-default' : 'cursor-pointer'}`}
-                style={selectedQuizAnswer === 4 ? { borderColor: themeColors.primary, backgroundColor: `${themeColors.primary}10` } : {}}
+                    : isQuizJazzedUp ? 'border-purple-200 bg-white hover:border-purple-300 hover:shadow-md' : 'border-gray-200'
+                } ${currentMode === 'design' ? 'cursor-default' : 'cursor-pointer'} ${
+                  isQuizJazzedUp && selectedQuizAnswer === 4 ? 'shadow-lg' : ''
+                }`}
+                style={selectedQuizAnswer === 4 
+                  ? isQuizJazzedUp 
+                    ? { 
+                        borderColor: '#A78BFA', 
+                        background: 'linear-gradient(135deg, rgba(167, 139, 250, 0.15), rgba(236, 72, 153, 0.1))',
+                        boxShadow: '0 4px 12px rgba(167, 139, 250, 0.3)'
+                      }
+                    : { borderColor: themeColors.primary, backgroundColor: `${themeColors.primary}10` }
+                  : {}
+                }
               >
                 <div className="flex items-start gap-2">
                   <div 
                     className={`w-4 h-4 rounded-full border-2 flex-shrink-0 mt-0.5 flex items-center justify-center ${
                       selectedQuizAnswer === 4 ? '' : 'border-gray-300'
                     }`}
-                    style={selectedQuizAnswer === 4 ? { borderColor: themeColors.primary } : {}}
+                    style={selectedQuizAnswer === 4 
+                      ? { borderColor: isQuizJazzedUp ? '#A78BFA' : themeColors.primary } 
+                      : {}
+                    }
                   >
                     {selectedQuizAnswer === 4 && (
-                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: themeColors.primary }}></div>
+                      <div 
+                        className={`w-2 h-2 rounded-full ${isQuizJazzedUp ? 'ring-2 ring-purple-300' : ''}`}
+                        style={{ backgroundColor: isQuizJazzedUp ? '#A78BFA' : themeColors.primary }}
+                      ></div>
                     )}
                   </div>
                   <div>
@@ -1065,8 +1176,16 @@ export default function EditLeadMagnetPanel({ onPreviewClick, onTabChange }: Edi
               </button>
               <button 
                 onClick={handleElementClick}
-                className="px-5 py-2 text-white rounded-lg text-xs font-medium hover:opacity-90 transition-all"
-                style={{ backgroundColor: themeColors.primary }}
+                className={`px-5 py-2 text-white rounded-lg text-xs font-medium hover:opacity-90 transition-all ${
+                  isQuizJazzedUp ? 'shadow-lg hover:shadow-xl' : ''
+                }`}
+                style={isQuizJazzedUp 
+                  ? { 
+                      background: 'linear-gradient(135deg, #836FFF, #A78BFA, #EC4899)',
+                      boxShadow: '0 4px 15px rgba(131, 111, 255, 0.4)'
+                    }
+                  : { backgroundColor: themeColors.primary }
+                }
               >
                 Next Question
               </button>
