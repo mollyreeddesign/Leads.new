@@ -473,9 +473,7 @@ export default function EditLeadMagnetPanel({ onPreviewClick, onTabChange }: Edi
           >
             <div 
               onClick={handleBackgroundClick}
-              className={`rounded-lg shadow-lg overflow-hidden transition-all duration-500 ${
-                isQuizJazzedUp && activePage === 'gate' ? 'bg-pink-100' : 'bg-white'
-              }`}
+              className="bg-white rounded-lg shadow-lg overflow-hidden"
             >
               {activePage === 'dataCapture' && renderDataCapturePage()}
               {activePage === 'gate' && renderGatePage()}
@@ -931,7 +929,7 @@ export default function EditLeadMagnetPanel({ onPreviewClick, onTabChange }: Edi
         {/* Quiz Question */}
         <div className={`px-6 py-8 transition-all duration-500 ${
           isQuizJazzedUp 
-            ? 'bg-gradient-to-br from-purple-50 via-white to-pink-50' 
+            ? 'animate-pulse-pink' 
             : 'bg-white'
         }`}>
           <div className="max-w-xl mx-auto">

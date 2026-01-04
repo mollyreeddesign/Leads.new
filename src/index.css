@@ -56,6 +56,20 @@ body {
   animation: border-glow 2s ease-in-out infinite;
 }
 
+/* Smooth pulsing pink background animation */
+@keyframes pulse-pink {
+  0%, 100% {
+    background-color: #fdf2f8; /* pink-50 */
+  }
+  50% {
+    background-color: #fce7f3; /* pink-100 */
+  }
+}
+
+.animate-pulse-pink {
+  animation: pulse-pink 2s ease-in-out infinite;
+}
+
 /* Custom scrollbar styles for edit panel */
 .edit-panel-scroll::-webkit-scrollbar {
   width: 8px;
