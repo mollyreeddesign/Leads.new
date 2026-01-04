@@ -70,6 +70,7 @@ type EditPanelProps = {
   onPromptEntered?: (entered: {resultsHeader: boolean, personalityTraits: boolean}) => void;
   onSectionChange?: (section: 'resultsHeader' | 'personalityTraits' | 'careTips' | null) => void;
   onSectionHover?: (section: 'resultsHeader' | 'personalityTraits' | 'careTips' | null) => void;
+  onTitleChange?: (title: string) => void;
 };
 
 // Theme palette definitions - exported for use in other components
@@ -95,7 +96,7 @@ export type ThemeColors = {
   text: string;         // Dark text color
 };
 
-export default function EditPanel({ selectedElement, selectedElementType, selectedStyles, selectedImageUrl, selectedIconHtml, onStyleUpdate, onImageUpdate, onIconUpdate, onModeChange, onThemeChange, selectedSection, onPromptEntered, onSectionChange, onSectionHover }: EditPanelProps = {}) {
+export default function EditPanel({ selectedElement, selectedElementType, selectedStyles, selectedImageUrl, selectedIconHtml, onStyleUpdate, onImageUpdate, onIconUpdate, onModeChange, onThemeChange, selectedSection, onPromptEntered, onSectionChange, onSectionHover, onTitleChange }: EditPanelProps = {}) {
   const [activeMode, setActiveMode] = useState<ModeType>('chat');
   const [messages, setMessages] = useState<Message[]>([]);
   const [isThinking, setIsThinking] = useState(false);
@@ -419,6 +420,10 @@ export default function EditPanel({ selectedElement, selectedElementType, select
       };
       setMessages(prev => [...prev, aiMessage]);
       setIsThinking(false);
+      // Update title after thinking animation completes
+      if (onTitleChange) {
+        onTitleChange('Every Starfish Has a Story ✨');
+      }
     }, 2500);
   };
 

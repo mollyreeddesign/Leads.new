@@ -36,6 +36,7 @@ export default function EditLeadMagnetPanel({ onPreviewClick, onTabChange }: Edi
     fontSize: '16px',
     fontFamily: 'Onest'
   });
+  const [quizTitle, setQuizTitle] = useState('Starfish Personality Quiz');
   
   // Theme colors state - default to Original palette
   const [themeColors, setThemeColors] = useState<ThemeColors>({
@@ -331,6 +332,7 @@ export default function EditLeadMagnetPanel({ onPreviewClick, onTabChange }: Edi
           onPromptEntered={setHasPromptBeenEntered}
           onSectionChange={handleSectionClick}
           onSectionHover={handleSectionHover}
+          onTitleChange={setQuizTitle}
           onModeChange={(mode) => {
             setCurrentMode(mode);
             if (mode === 'controls') {
@@ -857,7 +859,7 @@ export default function EditLeadMagnetPanel({ onPreviewClick, onTabChange }: Edi
             onClick={handleElementClick}
             className={`text-xl font-bold mb-2 ${getTextHoverClass()}`}
           >
-            Starfish Personality Quiz
+            {quizTitle}
           </h1>
           <p 
             onClick={handleElementClick}
